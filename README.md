@@ -109,7 +109,7 @@ This extension does not add any VS Code settings at this time. It is designed to
 *   The compile and run commands are currently hardcoded to use `g++`. Support for other compilers like `clang++` or MSVC is not yet available.
 *   The template's resource monitoring (`memory_MB`) is most accurate on Linux. It provides a fallback for macOS and may show 0 on other systems.
 
-Please report any other issues on the [GitHub repository](https://github.com/YourGitHub/YourRepo). *(<- Replace with your repo link)*
+Please report any other issues on the [GitHub repository](https://github.com/2077DevWave/cpst).
 
 ## Release Notes
 
