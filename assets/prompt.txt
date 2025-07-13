@@ -1,0 +1,343 @@
+You are an expert C++ programmer specializing in competitive programming and algorithmic problem-solving.
+
+Your task is to write the C++ implementation for three specific functions: `generator`, `validator`, and `checker` for the competitive programming problem provided below. You will be filling in the missing sections of a pre-written C++ testing framework.
+
+Analyze the problem statement carefully, paying close attention to input/output formats, constraints, and edge cases.
+
+---
+
+### 1. The Problem Statement
+
+**$(problem_statement)**
+
+---
+
+### 2. The Testing Framework You Must Complete
+
+Here is the C++ testing framework. You must write the code that goes inside the `/* AI SECTION */` blocks. **Do not modify any other part of this code.**
+
+```cpp
+// tester.cpp
+//
+// This program is a testing framework for a single C++ solution file.
+// It is designed to be completed by an AI by filling in the logic for
+// a specific competitive programming problem in the designated "AI SECTION" blocks.
+//
+// How to use:
+// 1. Give an AI the problem description.
+// 2. Give the AI this file and ask it to complete the code in the three
+//    "AI SECTION" blocks (Generator, Validator, Checker) based on the problem.
+// 3. Compile this file: g++ -std=c++17 -o tester tester.cpp
+// 4. Run against a solution: ./tester path/to/your/solution.cpp
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <random>
+#include <chrono>
+#include <sstream>
+#include <stdexcept>
+#include <memory>
+
+// For process management on POSIX systems (Linux, macOS)
+#include <unistd.h>
+#include <sys/wait.h>
+
+// --- Configuration ---
+const int NUM_TESTS = 100;
+const std::string COMPILER = "g++";
+const std::string COMPILER_FLAGS = "-std=c++17 -O2 -Wall";
+const std::string EXTERNAL_EXEC_NAME = "./solution_exec";
+
+// --- Color Codes for Printing ---
+namespace Color {
+    const std::string RESET = "\033[0m";
+    const std::string GREEN = "\033[32m";
+    const std::string RED = "\033[31m";
+    const std::string YELLOW = "\033[33m";
+    const std::string BLUE = "\033[34m";
+}
+
+void print_status(const std::string& status, const std::string& color, const std::string& message) {
+    std::cout << "[" << color << status << Color::RESET << "] " << message << std::endl;
+}
+
+// ===================================================================================
+// SECTION 1: GENERATOR
+// ===================================================================================
+// Generates a random test case and returns it as a string.
+std::string generator(unsigned seed) {
+    // A random number generator seeded for reproducibility.
+    std::mt19937 rng(seed);
+    // A stringstream to build the output.
+    std::stringstream ss;
+
+    /*
+    AI SECTION: GENERATOR
+    -----------------------
+    INSTRUCTIONS:
+    1.  Based on the problem description, generate a valid, random test case.
+    2.  Use the `rng` object to generate random numbers.
+        Example: std::uniform_int_distribution<int> dist(1, 100); int my_rand = dist(rng);
+    3.  Write the generated test case into the `ss` stringstream. The format
+        must match the problem's expected input format.
+        Example: ss << my_rand << " " << another_rand << std::endl;
+    */
+
+    // EXAMPLE for "Find a prime between L and R":
+    // const int MAX_VAL = 100000;
+    // std::uniform_int_distribution<int> dist(1, MAX_VAL);
+    // int l = dist(rng);
+    // int r = dist(rng);
+    // if (l > r) std::swap(l, r);
+    // ss << l << " " << r;
+
+
+    return ss.str();
+}
+
+// ===================================================================================
+// SECTION 2: VALIDATOR
+// ===================================================================================
+// Validates if the generated test case conforms to the problem constraints.
+bool validator(const std::string& test_case) {
+    // The test case is provided as a stringstream for easy parsing.
+    std::stringstream ss(test_case);
+    
+    /*
+    AI SECTION: VALIDATOR
+    ---------------------
+    INSTRUCTIONS:
+    1.  Read the data from the `ss` stringstream.
+        Example: int n; if (!(ss >> n)) return false;
+    2.  Check if all values adhere to the constraints defined in the problem
+        statement (e.g., range, size, order, format).
+    3.  If any constraint is violated, return `false`.
+    4.  If all constraints are met, return `true`.
+    */
+
+    // EXAMPLE for "Find a prime between L and R" with constraints 1 <= L <= R <= 100000:
+    // const int MIN_VAL = 1;
+    // const int MAX_VAL = 100000;
+    // int l, r;
+    // if (!(ss >> l >> r)) return false; // Check format
+    // if (l < MIN_VAL || l > MAX_VAL) return false; // Check range of L
+    // if (r < MIN_VAL || r > MAX_VAL) return false; // Check range of R
+    // if (l > r) return false; // Check order
+
+
+    // This final check ensures there is no extra data in the input. Do not remove.
+    if (ss.rdbuf()->in_avail() != 0) return false;
+    return true;
+}
+
+// ===================================================================================
+// SECTION 3: EXTERNAL SOLUTION RUNNER (No AI section here)
+// ===================================================================================
+std::string run_external_solution(const std::string& input) {
+    int pipe_stdin[2], pipe_stdout[2];
+    if (pipe(pipe_stdin) == -1 || pipe(pipe_stdout) == -1) throw std::runtime_error("pipe() failed");
+
+    pid_t pid = fork();
+    if (pid == -1) throw std::runtime_error("fork() failed");
+
+    if (pid == 0) { // Child process
+        close(pipe_stdin[1]); dup2(pipe_stdin[0], STDIN_FILENO); close(pipe_stdin[0]);
+        close(pipe_stdout[0]); dup2(pipe_stdout[1], STDOUT_FILENO); close(pipe_stdout[1]);
+        execl(EXTERNAL_EXEC_NAME.c_str(), EXTERNAL_EXEC_NAME.c_str(), (char*)NULL);
+        perror("execl failed"); exit(1);
+    } else { // Parent process
+        close(pipe_stdin[0]); close(pipe_stdout[1]);
+        write(pipe_stdin[1], input.c_str(), input.length());
+        close(pipe_stdin[1]);
+        std::stringstream output_ss;
+        char buffer[4096];
+        ssize_t bytes_read;
+        while ((bytes_read = read(pipe_stdout[0], buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytes_read] = '\0'; output_ss << buffer;
+        }
+        close(pipe_stdout[0]);
+        int status;
+        waitpid(pid, &status, 0);
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) return "RUNTIME_ERROR";
+        return output_ss.str();
+    }
+    return "INTERNAL_ERROR";
+}
+
+
+// ===================================================================================
+// SECTION 4: CHECKER
+// ===================================================================================
+// Checks if the user's output is a valid answer for the given input.
+bool checker(const std::string& input, const std::string& user_output_str) {
+    // The original test case for which the answer was produced.
+    std::stringstream test_case(input);
+    // The user's full output as a stringstream.
+    std::stringstream user_answer(user_output_str);
+
+    /*
+    AI SECTION: CHECKER
+    -------------------
+    INSTRUCTIONS:
+    This function must determine if the user's answer is a correct solution to
+    the problem, especially for problems with multiple correct answers.
+
+    1.  **Parse Input:** Read the parameters from the `test_case` stream to
+        understand the specific problem instance.
+        Example: int l, r; test_case >> l >> r;
+
+    2.  **Parse User's Answer:** Read the answer from the `user_answer` stream.
+        Handle cases where the format is wrong or the output is not a valid
+        type (e.g., not a number). If parsing fails, it's a Wrong Answer, so
+        return `false`.
+        Example: long long user_val; if (!(user_answer >> user_val)) return false;
+
+    3.  **Verify Correctness:** Based on the input from step 1, apply the
+        problem's rules to verify the user's answer from step 2.
+        - Is the answer in the correct range?
+        - Does it satisfy all properties required by the problem (e.g., is it prime, is it a valid path)?
+        - Handle special cases, like when the user should output -1 if no
+          solution exists. Your checker must independently determine if a
+          solution should exist and validate the user's claim.
+
+    4.  **Return Result:** Return `true` if the answer is correct, `false` otherwise.
+        For debugging, you can print info to stderr: std::cerr << "Info: ..." << std::endl;
+    */
+    
+    // An example is intentionally left out here, as the checker logic is the
+    // core of the problem-specific implementation. The AI should create it
+    // from scratch based on the instructions and the problem description.
+    
+    return false; // Placeholder
+}
+
+// ===================================================================================
+// MAIN ORCHESTRATOR (No AI section here)
+// ===================================================================================
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        print_status("ERROR", Color::RED, "Usage: ./tester <path_to_solution.cpp>");
+        return 1;
+    }
+    std::string solution_path = argv[1];
+
+    print_status("INFO", Color::BLUE, "Compiling external solution...");
+    std::string compile_cmd = COMPILER + " " + COMPILER_FLAGS + " " + solution_path + " -o " + EXTERNAL_EXEC_NAME;
+    if (system(compile_cmd.c_str()) != 0) {
+        print_status("ERROR", Color::RED, "Compilation of external solution failed.");
+        return 1;
+    }
+    print_status("OK", Color::GREEN, "External solution compiled successfully.");
+
+    for (int i = 1; i <= NUM_TESTS; ++i) {
+        std::cout << "--- Running Test #" << i << " ---" << std::endl;
+
+        std::string input_str = generator(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i);
+        if (!validator(input_str)) {
+            print_status("ERROR", Color::RED, "Generator created an invalid test case. Aborting.");
+            std::cout << "Invalid Input: " << input_str << std::endl;
+            break;
+        }
+
+        std::string user_ans_str;
+        try {
+            user_ans_str = run_external_solution(input_str);
+            if (user_ans_str == "RUNTIME_ERROR") {
+                print_status("RTE", Color::RED, "Runtime Error in external solution.");
+                std::cout << "Input:\n" << input_str << std::endl;
+                break;
+            }
+        } catch (const std::runtime_error& e) {
+            print_status("ERROR", Color::RED, "Internal testing error: " + std::string(e.what()));
+            break;
+        }
+
+        if (checker(input_str, user_ans_str)) {
+            print_status("OK", Color::GREEN, "Test passed!");
+        } else {
+            print_status("WA", Color::RED, "Wrong Answer!");
+            std::cout << "Input:\n" << input_str << std::endl;
+            std::cout << "Your Output:\n" << user_ans_str << std::endl;
+            break;
+        }
+    }
+
+    remove(EXTERNAL_EXEC_NAME.c_str());
+    return 0;
+}
+```
+
+---
+
+### 3. Your Task and Output Format
+
+Based on the problem statement, provide the C++ code for the three `/* AI SECTION */` blocks. Follow these instructions precisely:
+
+**A. Logic for Each Section:**
+
+*   **`generator`:**
+    *   Generate a valid, random test case that adheres to the problem's constraints.
+    *   Use the provided `rng` object for randomness.
+    *   Consider edge cases (e.g., minimum/maximum values for N, negative numbers, empty ranges, etc.).
+    *   Write the final test case to the `ss` stringstream.
+
+*   **`validator`:**
+    *   Read the test case from the `ss` stringstream.
+    *   Validate that all parts of the test case (e.g., N, array elements, string characters) strictly follow **all** constraints mentioned in the problem (e.g., `1 <= N <= 10^5`).
+    *   Return `false` if any constraint is violated.
+
+*   **`checker`:**
+    *   This is the most critical function. It must be the **single source of truth**.
+    *   Read the original input from the `test_case` stream.
+    *   Read the user's answer from the `user_answer` stream.
+    *   Correctly parse the user's output. If the format is invalid, return `false`.
+    *   Logically determine if the user's answer is a correct solution to the problem.
+        *   For problems with a single answer, you can compute the correct answer and compare.
+        *   For problems with multiple possible answers, you must verify that the user's answer satisfies all conditions of a correct solution.
+    *   Return `true` if the answer is correct, and `false` otherwise.
+
+**B. Required Output Structure:**
+
+Your entire response should be a **single C++ code block**. The code you provide must be structured with comments exactly as shown below, containing only the implementation that goes inside each function.
+
+```cpp
+// --- GENERATOR ---
+// Your C++ code for the body of the generator function.
+// Example:
+// const int MAX_N = 100000;
+// std::uniform_int_distribution<int> n_dist(1, MAX_N);
+// int n = n_dist(rng);
+// ss << n << std::endl;
+// ...
+
+
+// --- VALIDATOR ---
+// Your C++ code for the body of the validator function.
+// Example:
+// const int MAX_N = 100000;
+// int n;
+// if (!(ss >> n)) return false;
+// if (n < 1 || n > MAX_N) return false;
+// ...
+
+
+// --- CHECKER ---
+// Your C++ code for the body of the checker function.
+// This is the most important part. Be thorough.
+// Example:
+// long long n;
+// test_case >> n;
+// std::vector<long long> a(n);
+// // ... read rest of test_case
+//
+// long long user_sum;
+// if (!(user_answer >> user_sum)) return false;
+//
+// // ... calculate correct answer and compare with user_sum
+//
+// return correct_sum == user_sum;
+
+```
+
+Do not include function signatures or any other code from the template. Just provide the internal logic for the three sections in the specified format.

@@ -1,0 +1,62 @@
+{
+  "name": "cpst",
+  "displayName": "CPST (Competive Programming Stress Testing)",
+  "description": "competive programming stress testing extension (With awesome Template)",
+  "version": "0.0.1",
+  "publisher": "2077devwave",
+  "icon": "media/main_icon.jpg",
+  "engines": {
+    "vscode": "^1.52.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/2077devwave/cpst.git"
+  },
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "stress-test-side-panel",
+          "title": "Stress Test",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "stress-test-side-panel": [
+        {
+          "id": "stress-test-side-panel-view",
+          "name": "Stess Test",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.52.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
+  }
+}
