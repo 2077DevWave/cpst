@@ -1,4 +1,4 @@
-# C++ Stress Tester
+# C++ Stress Tester (CPST)
 
 Tired of manually setting up test files and compilation commands for your C++ competitive programming solutions? **C++ Stress Tester** streamlines your entire workflow, letting you focus on what matters: solving the problem.
 
@@ -112,6 +112,11 @@ This extension does not add any VS Code settings at this time. It is designed to
 Please report any other issues on the [GitHub repository](https://github.com/2077DevWave/cpst).
 
 ## Release Notes
+
+### 0.0.2
+
+*   Add LICENSE
+*   Fix Readme.md
 
 ### 0.0.1
 
