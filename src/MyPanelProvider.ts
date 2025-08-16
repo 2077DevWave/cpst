@@ -37,22 +37,37 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
         this._statusBarItem = statusBarItem;
     }
 
+    public runTest() {
+        this.clearHistory();
+        this.compileAndRunTest();
+    }
+
     private _updateStatusBar() {
-        const { Passed, Mismatch, TLE, MLE } = this._resultCounts;
-        const total = Passed + Mismatch + TLE + MLE;
+        const { Passed, Mismatch, TLE, MLE, Error } = this._resultCounts;
+        const total = Passed + Mismatch + TLE + MLE + Error;
+        
         if (total === 0) {
-            this._statusBarItem.text = 'Stress Tester';
-            this._statusBarItem.tooltip = 'Run a stress test to see results';
+            this._statusBarItem.text = 'Stress Tester: Ready';
+            this._statusBarItem.tooltip = 'Click to run stress test';
+            this._statusBarItem.backgroundColor = undefined;
+            this._statusBarItem.command = 'stress-tester.run';
             return;
         }
         
-        const statusText = `P:${Passed} W:${Mismatch} T:${TLE} M:${MLE}`;
-        this._statusBarItem.text = `$(check) ${statusText}`;
+        const statusText = `P:${Passed} W:${Mismatch} T:${TLE} M:${MLE} E:${Error}`;
+        this._statusBarItem.text = `Stress Test: ${statusText}`;
         this._statusBarItem.tooltip = `Stress Test Results:
 - Passed: ${Passed}
 - Wrong Answer: ${Mismatch}
 - Time Limit Exceeded: ${TLE}
-- Memory Limit Exceeded: ${MLE}`;
+- Memory Limit Exceeded: ${MLE}
+- Error: ${Error}`;
+
+        if (Mismatch > 0 || TLE > 0 || MLE > 0 || Error > 0) {
+            this._statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+        } else {
+            this._statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.remoteBackground');
+        }
     }
 
     public async updateViewFor(activeFileUri: vscode.Uri | undefined) {
@@ -123,8 +138,7 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
                     await this.generateTestFile();
                     return;
                 case 'run':
-                    this.clearHistory();
-                    this.compileAndRunTest();
+                    this.runTest();
                     return;
             }
         });

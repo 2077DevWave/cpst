@@ -4,10 +4,15 @@ import { MyPanelProvider } from './MyPanelProvider';
 export function activate(context: vscode.ExtensionContext) {
 
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.command = MyPanelProvider.viewType;
     context.subscriptions.push(statusBarItem);
 
     const provider = new MyPanelProvider(context.extensionUri, statusBarItem);
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('stress-tester.run', () => {
+            provider.runTest();
+        })
+    );
 
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(MyPanelProvider.viewType, provider, {
@@ -22,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     
     provider.updateViewFor(vscode.window.activeTextEditor?.document.uri);
+    statusBarItem.show();
 }
 
 export function deactivate() {}
