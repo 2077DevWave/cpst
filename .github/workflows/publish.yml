@@ -30,5 +30,11 @@ jobs:
       - run: npm install
       - name: Install vsce
         run: npm install -g vsce
-      - name: Publish to VS Code Marketplace
-        run: vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+      - name: Configure Git
+        run: |
+          git config --global user.name "2077devwave"
+          git config --global user.email "2077devwave@gmail.com"
+      - name: Publish and push version
+        run: |
+          vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+          git push --follow-tags
