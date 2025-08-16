@@ -1,5 +1,6 @@
 [![CI](https://github.com/2077DevWave/cpst/actions/workflows/ci.yml/badge.svg)](https://github.com/2077DevWave/cpst/actions/workflows/ci.yml)
 [![Publish to VS Code Marketplace](https://github.com/2077DevWave/cpst/actions/workflows/publish.yml/badge.svg?branch=master)](https://github.com/2077DevWave/cpst/actions/workflows/publish.yml)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/2077devwave.cpst?style=flat&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=2077devwave.cpst)
 [![Latest Release](https://img.shields.io/github/v/tag/2077devwave/cpst)](https://github.com/2077DevWave/cpst/tags)
 [![Contributors](https://img.shields.io/github/contributors/2077devwave/cpst)](https://github.com/2077devwave/cpst/graphs/contributors)
 [![Pull Requests](https://img.shields.io/github/issues-pr/2077devwave/cpst)](https://github.com/2077devwave/cpst/pulls)
