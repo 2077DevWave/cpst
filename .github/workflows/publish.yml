@@ -4,6 +4,7 @@ name: Publish to VS Code Marketplace
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,4 +31,4 @@ jobs:
       - name: Install vsce
         run: npm install -g vsce
       - name: Publish to VS Code Marketplace
-        run: vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        run: vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
