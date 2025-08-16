@@ -13,6 +13,9 @@
 #include <locale> // For std::isspace
 #include <algorithm> // For std::find_if
 #include <vector> // For std::vector
+#include "json.hpp" 
+
+using json = nlohmann::json;
 
 using namespace std;
 
@@ -168,31 +171,65 @@ string trim_whitespace(const string& s) {
     return (wsback<=wsfront ? "" : string(wsfront,wsback));
 }
 
-// Helper to unescape JSON strings
-string unescape_json_string(const string& s) {
-    string unescaped_s;
+std::string code_point_to_utf8(unsigned int cp) {
+    std::string result;
+    if (cp <= 0x7F) {
+        result += static_cast<char>(cp);
+    } else if (cp <= 0x7FF) {
+        result += static_cast<char>(0xC0 | (cp >> 6));
+        result += static_cast<char>(0x80 | (cp & 0x3F));
+    } else if (cp <= 0xFFFF) {
+        result += static_cast<char>(0xE0 | (cp >> 12));
+        result += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+        result += static_cast<char>(0x80 | (cp & 0x3F));
+    } else if (cp <= 0x10FFFF) {
+        result += static_cast<char>(0xF0 | (cp >> 18));
+        result += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+        result += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+        result += static_cast<char>(0x80 | (cp & 0x3F));
+    }
+    return result;
+}
+
+std::string unescape_json_string(const std::string& s) {
+    std::string unescaped_s;
+    unescaped_s.reserve(s.length()); // Pre-allocate memory for efficiency
+
     for (size_t i = 0; i < s.length(); ++i) {
         if (s[i] == '\\') {
             if (i + 1 < s.length()) {
-                switch (s[i+1]) {
-                    case '"': unescaped_s += '"'; i++; break;
+                switch (s[i + 1]) {
+                    case '"':  unescaped_s += '"'; i++; break;
                     case '\\': unescaped_s += '\\'; i++; break;
-                    case 'b': unescaped_s += '\b'; i++; break;
-                    case 'f': unescaped_s += '\f'; i++; break;
-                    case 'n': unescaped_s += '\n'; i++; break;
-                    case 'r': unescaped_s += '\r'; i++; break;
-                    case 't': unescaped_s += '\t'; i++; break;
-                    case 'u': // Unicode escape sequence \uXXXX
+                    case 'b':  unescaped_s += '\b'; i++; break;
+                    case 'f':  unescaped_s += '\f'; i++; break;
+                    case 'n':  unescaped_s += '\n'; i++; break;
+                    case 'r':  unescaped_s += '\r'; i++; break;
+                    case 't':  unescaped_s += '\t'; i++; break;
+                    case 'u':
                         if (i + 5 < s.length()) {
-                            string hex_code = s.substr(i + 2, 4);
-                            unescaped_s += (char)stoul(hex_code, nullptr, 16);
-                            i += 5;
+                            try {
+                                std::string hex_code = s.substr(i + 2, 4);
+                                unsigned int code_point = std::stoul(hex_code, nullptr, 16);
+                                unescaped_s += code_point_to_utf8(code_point);
+                                i += 5;
+                            } catch (const std::invalid_argument& e) {
+                                unescaped_s += s[i]; // Not a valid hex code, keep original
+                            } catch (const std::out_of_range& e) {
+                                unescaped_s += s[i]; // Hex code out of range, keep original
+                            }
                         } else {
-                            unescaped_s += s[i]; // Malformed, keep original
+                            unescaped_s += s[i]; // Malformed \u sequence, keep original
                         }
                         break;
-                    default: unescaped_s += s[i]; break; // Not a recognized escape, keep original
+                    default:
+                        // Not a recognized escape sequence, treat backslash as a literal.
+                        unescaped_s += s[i];
+                        break;
                 }
+            } else {
+                // This handles the case of a trailing backslash.
+                unescaped_s += s[i];
             }
         } else {
             unescaped_s += s[i];
@@ -220,7 +257,7 @@ string escape_json_string(const string& s) {
     string escaped_s = "";
     for (char c : s) {
         switch (c) {
-            case '"': escaped_s += "\""; break;
+            case '"': escaped_s += "\\\""; break;
             case '\\': escaped_s += "\\\\"; break;
             case '\b': escaped_s += "\\b"; break;
             case '\f': escaped_s += "\\f"; break;
@@ -264,46 +301,38 @@ string serialize_json_map_of_arrays(const map<string, vector<string>>& data) {
 }
 
 // Helper to parse a simple JSON object with string keys and array of string values
-map<string, vector<string>> parse_json_map_of_arrays(const string& json_str) {
-    map<string, vector<string>> data;
-    string trimmed_json = trim_whitespace(json_str);
-    if (trimmed_json.empty() || trimmed_json == "{}") return data;
+std::map<std::string, std::vector<std::string>> parse_json_map_of_arrays(const std::string& json_str) {
+    std::map<std::string, std::vector<std::string>> data;
+    try {
+        // Parse the JSON string
+        json j = json::parse(json_str);
 
-    // Remove outer braces
-    if (trimmed_json.front() == '{' && trimmed_json.back() == '}') {
-        trimmed_json = trimmed_json.substr(1, trimmed_json.length() - 2);
-    } else {
-        return data; // Invalid format
-    }
+        // Check if the parsed JSON is an object
+        if (j.is_object()) {
+            // Iterate over each key-value pair in the JSON object
+            for (auto& element : j.items()) {
+                const std::string& key = element.key();
+                const json& value = element.value();
 
-    vector<string> pairs = split_string(trimmed_json, ",\n");
-    for (const string& pair_str : pairs) {
-        size_t colon_pos = pair_str.find(':');
-        if (colon_pos == string::npos) continue;
-
-        string key_str = trim_whitespace(pair_str.substr(0, colon_pos));
-        string value_str = trim_whitespace(pair_str.substr(colon_pos + 1));
-
-        // Remove quotes from key
-        if (key_str.length() >= 2 && key_str.front() == '"') {
-            key_str = key_str.substr(1, key_str.length() - 2);
-        }
-        key_str = unescape_json_string(key_str);
-
-        // Parse array value
-        if (value_str.length() >= 2 && value_str.front() == '[' && value_str.back() == ']') {
-            string inner_array = value_str.substr(1, value_str.length() - 2);
-            vector<string> ids;
-            if (!inner_array.empty()) {
-                vector<string> raw_ids = split_string(inner_array, ", ");
-                for (string& id_str : raw_ids) {
-                    id_str = trim_whitespace(id_str);
-                    if (id_str.length() >= 2 && id_str.front() == '"') id_str = id_str.substr(1, id_str.length() - 2);
-                    ids.push_back(unescape_json_string(id_str));
+                // Ensure the value is an array
+                if (value.is_array()) {
+                    std::vector<std::string> vec;
+                    // Iterate over each item in the array
+                    for (const auto& item : value) {
+                        // Ensure the item is a string before adding it to the vector
+                        if (item.is_string()) {
+                            vec.push_back(item.get<std::string>());
+                        }
+                    }
+                    data[key] = vec;
                 }
             }
-            data[key_str] = ids;
         }
+    } catch (const json::parse_error& e) {
+        // Handle parsing errors, e.g., log the error message
+        std::cerr << "JSON parsing error: " << e.what() << std::endl;
+        // Return an empty map to indicate failure
+        return {};
     }
     return data;
 }
@@ -326,7 +355,7 @@ int main(int argc, char* argv[]) {
 
     // Ensure .cpst directory exists
     string base_output_dir = ".cpst";
-    if (mkdir(base_output_dir.c_str(), 0777) == -1) {
+    if (mkdir(base_output_dir.c_str(), 0755) == -1) {
         if (errno != EEXIST) { // EEXIST means directory already exists
             print_status("ERROR", Color::RED, "Failed to create base output directory: " + base_output_dir);
             return 1;
@@ -341,7 +370,7 @@ int main(int argc, char* argv[]) {
     string unique_id = solution_filename + "_" + ss.str();
     string solution_output_dir = base_output_dir + "/" + unique_id;
 
-    if (mkdir(solution_output_dir.c_str(), 0777) == -1) {
+    if (mkdir(solution_output_dir.c_str(), 0755) == -1) {
         if (errno != EEXIST) {
             print_status("ERROR", Color::RED, "Failed to create solution output directory: " + solution_output_dir);
             return 1;
@@ -353,8 +382,11 @@ int main(int argc, char* argv[]) {
     // Handle solution_map.json
     string map_file_path = base_output_dir + "/solution_map.json";
     ifstream map_read_file(map_file_path);
-    string map_content((istreambuf_iterator<char>(map_read_file)), istreambuf_iterator<char>());
-    map_read_file.close();
+    string map_content;
+    if (map_read_file.is_open()) {
+        map_content.assign((istreambuf_iterator<char>(map_read_file)), istreambuf_iterator<char>());
+        map_read_file.close();
+    }
 
     map<string, vector<string>> solution_map = parse_json_map_of_arrays(map_content);
 
@@ -424,9 +456,9 @@ int main(int argc, char* argv[]) {
             print_status("ERROR", Color::RED, "Failed to open JSON output file: " + json_output_filename);
         } else {
             json_file << "{\n";
-            json_file << "  \"testcase_input\": " << escape_json_string(input_str) << ",\n";
-            json_file << "  \"output\": " << escape_json_string(result.output) << ",\n";
-            json_file << "  \"result\": " << escape_json_string(result.status) << ",\n";
+            json_file << "  \"testcase_input\": \"" << escape_json_string(input_str) << "\",\n";
+            json_file << "  \"output\": \"" << escape_json_string(result.output) << "\",\n";
+            json_file << "  \"result\": \"" << escape_json_string(result.status) << "\",\n";
             json_file << "  \"time_ms\": " << result.time_ms << ",\n";
             json_file << "  \"memory_MB\": " << result.memory_MB << "\n";
             json_file << "}\n";
