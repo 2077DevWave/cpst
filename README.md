@@ -1,3 +1,5 @@
+[![CI](https://github.com/2077DevWave/cpst/actions/workflows/ci.yml/badge.svg)](https://github.com/2077DevWave/cpst/actions/workflows/ci.yml)
+
 # C++ Stress Tester (CPST)
 
 Tired of manually setting up test files and compilation commands for your C++ competitive programming solutions? **C++ Stress Tester** streamlines your entire workflow, letting you focus on what matters: solving the problem.
