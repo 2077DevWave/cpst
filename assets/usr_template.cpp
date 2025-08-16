@@ -13,9 +13,11 @@
 #include <locale> // For std::isspace
 #include <algorithm> // For std::find_if
 #include <vector> // For std::vector
-#include "json.hpp" 
+#include <iostream>
+#include <string>
+#include <map>
+#include <cctype> // for isspace
 
-using json = nlohmann::json;
 
 using namespace std;
 
@@ -300,40 +302,117 @@ string serialize_json_map_of_arrays(const map<string, vector<string>>& data) {
     return ss.str();
 }
 
-// Helper to parse a simple JSON object with string keys and array of string values
-std::map<std::string, std::vector<std::string>> parse_json_map_of_arrays(const std::string& json_str) {
-    std::map<std::string, std::vector<std::string>> data;
-    try {
-        // Parse the JSON string
-        json j = json::parse(json_str);
+static std::string parse_string_token(const std::string& str, size_t& pos);
 
-        // Check if the parsed JSON is an object
-        if (j.is_object()) {
-            // Iterate over each key-value pair in the JSON object
-            for (auto& element : j.items()) {
-                const std::string& key = element.key();
-                const json& value = element.value();
+static void skip_whitespace(const std::string& str, size_t& pos) {
+    while (pos < str.length() && isspace(str[pos])) {
+        pos++;
+    }
+}
 
-                // Ensure the value is an array
-                if (value.is_array()) {
-                    std::vector<std::string> vec;
-                    // Iterate over each item in the array
-                    for (const auto& item : value) {
-                        // Ensure the item is a string before adding it to the vector
-                        if (item.is_string()) {
-                            vec.push_back(item.get<std::string>());
-                        }
-                    }
-                    data[key] = vec;
+static std::string parse_string_token(const std::string& str, size_t& pos) {
+    std::string result;
+    if (pos >= str.length() || str[pos] != '"') {
+        return ""; // Error: expected a quote
+    }
+    pos++; // Skip opening quote
+
+    while (pos < str.length() && str[pos] != '"') {
+        if (str[pos] == '\\') {
+            pos++; // Skip backslash
+            if (pos < str.length()) {
+                switch (str[pos]) {
+                    case '"':  result += '"'; break;
+                    case '\\': result += '\\'; break;
+                    case '/':  result += '/'; break;
+                    case 'b':  result += '\b'; break;
+                    case 'f':  result += '\f'; break;
+                    case 'n':  result += '\n'; break;
+                    case 'r':  result += '\r'; break;
+                    case 't':  result += '\t'; break;
+                    default: // Invalid escape sequence, just add the character
+                        result += str[pos];
+                        break;
                 }
             }
+        } else {
+            result += str[pos];
         }
-    } catch (const json::parse_error& e) {
-        // Handle parsing errors, e.g., log the error message
-        std::cerr << "JSON parsing error: " << e.what() << std::endl;
-        // Return an empty map to indicate failure
-        return {};
+        pos++;
     }
+
+    if (pos >= str.length() || str[pos] != '"') {
+        return ""; // Error: unterminated string
+    }
+    pos++; // Skip closing quote
+    return result;
+}
+
+
+std::map<std::string, std::vector<std::string>> parse_json_map_of_arrays(const std::string& json_str) {
+    std::map<std::string, std::vector<std::string>> data;
+    size_t pos = 0;
+
+    skip_whitespace(json_str, pos);
+    if (pos >= json_str.length() || json_str[pos] != '{') return {}; // Must start with {
+    pos++;
+
+    while (pos < json_str.length()) {
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length()) return {}; // Malformed, unexpected end
+        if (json_str[pos] == '}') { // End of object
+            pos++;
+            break;
+        }
+
+        // 1. Parse Key
+        std::string key = parse_string_token(json_str, pos);
+        if (key.empty() && json_str[pos-1] != '"') return {}; // Key parsing failed
+
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length() || json_str[pos] != ':') return {}; // Must have a colon
+        pos++;
+
+        // 2. Parse Value (which must be an array)
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length() || json_str[pos] != '[') return {}; // Value must be an array
+        pos++;
+
+        std::vector<std::string> values;
+        while (pos < json_str.length()) {
+            skip_whitespace(json_str, pos);
+            if (pos >= json_str.length()) return {}; // Malformed array
+            if (json_str[pos] == ']') { // End of array
+                pos++;
+                break;
+            }
+
+            std::string value = parse_string_token(json_str, pos);
+             if (value.empty() && json_str[pos-1] != '"') return {}; // Value parsing failed
+
+            values.push_back(value);
+
+            skip_whitespace(json_str, pos);
+            if (pos >= json_str.length()) return {}; // Malformed
+            if (json_str[pos] == ']') { // End of array
+                pos++;
+                break;
+            }
+            if (json_str[pos] != ',') return {}; // Must have a comma between elements
+            pos++;
+        }
+        data[key] = values;
+
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length()) break; // End of string
+        if (json_str[pos] == '}') { // End of object
+            pos++;
+            break;
+        }
+        if (json_str[pos] != ',') return {}; // Must have a comma between pairs
+        pos++;
+    }
+
     return data;
 }
 
@@ -463,7 +542,7 @@ int main(int argc, char* argv[]) {
             json_file << "  \"memory_MB\": " << result.memory_MB << "\n";
             json_file << "}\n";
             json_file.close();
-            print_status("INFO", Color::BLUE, "Results saved to: " + json_output_filename);
+            // print_status("INFO", Color::BLUE, "Results saved to: " + json_output_filename);
         }
     }
 
