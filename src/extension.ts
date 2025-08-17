@@ -23,49 +23,20 @@ export function activate(context: vscode.ExtensionContext) {
     }
     const baseDir = path.join(workspaceFolder.uri.fsPath, '.cpst');
     
-    const provider = new MyPanelProvider(
-        context, 
-        statusBarItem,
-        new StressTestEngine(
-            new Compiler(
-                // This is a bit of a hack, but it's the easiest way to get the reporter to the compiler
-                // without a major refactoring of the constructor chain.
-                {
-                    reportProgress: (message: any) => {
-                        provider.reportProgress(message);
-                    },
-                    reportError: (message: string) => {
-                        provider.reportError(message);
-                    },
-                    reportHistoryCleared: () => {
-                        provider.reportHistoryCleared();
-                    },
-                    reportTestRunning: () => {
-                        provider.reportTestRunning();
-                    }
-                }
-            ),
-            new Executor(),
-            fileManager,
-            // Same hack as above
-            {
-                reportProgress: (message: any) => {
-                    provider.reportProgress(message);
-                },
-                reportError: (message: string) => {
-                    provider.reportError(message);
-                },
-                reportHistoryCleared: () => {
-                    provider.reportHistoryCleared();
-                },
-                reportTestRunning: () => {
-                    provider.reportTestRunning();
-                }
-            },
-            baseDir
-        ),
-        fileManager
+    // Create provider without the engine first
+    const provider = new MyPanelProvider(context, statusBarItem, fileManager);
+
+    // Create engine, passing provider as the reporter
+    const stressTestEngine = new StressTestEngine(
+        new Compiler(provider),
+        new Executor(),
+        fileManager,
+        provider,
+        baseDir
     );
+
+    // Now, inject the engine into the provider
+    provider.setStressTestEngine(stressTestEngine);
 
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(MyPanelProvider.viewType, provider, {
