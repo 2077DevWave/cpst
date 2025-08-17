@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { IFileManager, ITestRunResult, IResultManager } from './interfaces';
+import { IFileManager, ITestRunResult, IResultManager, IJsonTestResult} from './interfaces';
 
 export class ResultManager implements IResultManager {
     constructor(
@@ -27,17 +27,8 @@ export class ResultManager implements IResultManager {
         this._fileManager.writeFile(this._mainJsonPath, JSON.stringify(mainJson, null, 4));
     }
 
-    public save(testCaseNumber: number, result: ITestRunResult): void {
-        const resultFilePath = path.join(this._runFolderPath, `test_${testCaseNumber}.json`);
-        const resultData = {
-            test_case: testCaseNumber,
-            last_result: result.status,
-            input: result.input || "",
-            user_output: result.output || "",
-            exec_time: result.duration || 0,
-            memory_used: result.memory || 0,
-            message: result.message || ""
-        };
-        this._fileManager.writeFile(resultFilePath, JSON.stringify(resultData, null, 4));
+    public save(result : IJsonTestResult): void {
+        const resultFilePath = path.join(this._runFolderPath, `test_${result.test_case}.json`);
+        this._fileManager.writeFile(resultFilePath, JSON.stringify(result, null, 4));
     }
 }
