@@ -51,7 +51,7 @@ export interface IExecutablePaths {
 }
 
 export interface ITestRunResult {
-    status: 'OK' | 'WA' | 'TLE' | 'MLE' | 'RE' | 'Error' | 'RUNTIME_ERROR' | string;
+    status: 'OK' | 'WA' | 'TLE' | 'MLE' | 'Error' | 'RUNTIME_ERROR';
     input?: string;
     output?: string;
     duration?: number;
