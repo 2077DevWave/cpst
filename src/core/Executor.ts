@@ -87,26 +87,18 @@ export class Executor implements IExecutor {
      * @returns A status string (e.g., 'OK', 'TLE', 'MLE', 'RUNTIME_ERROR').
      */
     private determineStatus(result: IRawExecutionResult): string {
-        // Check for Time Limit Exceeded (TLE)
         if (result.signal === 'SIGTERM') {
-            // Check if the TLE was caused by exceeding the maxBuffer (MLE)
-            if (result.error && result.error.message.includes('maxBuffer')) {
-                return 'MLE'; // Memory Limit Exceeded
-            }
-            return 'TLE'; // Time Limit Exceeded
+            return 'TLE';
         }
-        
-        // Check for Memory Limit Exceeded (MLE) on its own, just in case.
-        if (result.error && result.error.message.includes('maxBuffer')) {
+
+        if (result.error?.message.includes('maxBuffer')) {
             return 'MLE';
         }
 
-        // Check for successful execution
         if (result.code === 0) {
             return 'OK';
         }
 
-        // Any other non-zero exit code is considered a Runtime Error
         return 'RUNTIME_ERROR';
     }
 }
