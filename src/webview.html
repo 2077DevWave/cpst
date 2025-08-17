@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress Tester</title>
+    <link rel="stylesheet" href="%DIFF2HTML_CSS%">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 10px; }
+        .hidden { display: none; }
+        #file-info { margin-bottom: 15px; font-style: italic; color: var(--vscode-descriptionForeground); }
+        button {
+            width: 100%; padding: 8px; border: none;
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            cursor: pointer; text-align: center;
+        }
+        button:hover { background-color: var(--vscode-button-hoverBackground); }
+    </style>
+</head>
+<body>
+    <div id="initial-view">
+        <p>Please open a <code>.cpp</code> file to begin.</p>
+    </div>
+
+    <div id="actions-view" class="hidden">
+        <div id="file-info"></div>
+        <div id="generate-view">
+            <button id="generate-button">Create Stress Test Files</button>
+        </div>
+        <div id="run-view" class="hidden">
+            <button id="run-button">Run Stress Test</button>
+        </div>
+    </div>
+    
+    <div id="results-view"></div>
+
+    <script src="%DIFF2HTML_JS%"></script>
+    <script nonce="%NONCE%">
+        const vscode = acquireVsCodeApi();
+        const initialView = document.getElementById('initial-view');
+        const actionsView = document.getElementById('actions-view');
+        const generateView = document.getElementById('generate-view');
+        const runView = document.getElementById('run-view');
+        const fileInfo = document.getElementById('file-info');
+        const resultsView = document.getElementById('results-view');
+
+        document.getElementById('generate-button').addEventListener('click', () => {
+            vscode.postMessage({ command: 'generate' });
+        });
+        document.getElementById('run-button').addEventListener('click', () => {
+            vscode.postMessage({ command: 'run' });
+        });
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.command) {
+                case 'show-initial-state':
+                    initialView.classList.remove('hidden');
+                    actionsView.classList.add('hidden');
+                    break;
+                case 'update-view':
+                    initialView.classList.add('hidden');
+                    actionsView.classList.remove('hidden');
+                    fileInfo.innerHTML = 'Testing: <code>' + message.solutionFilename + '</code>';
+                    if (message.testFileExists) {
+                        generateView.classList.add('hidden');
+                        runView.classList.remove('hidden');
+                    } else {
+                        generateView.classList.remove('hidden');
+                        runView.classList.add('hidden');
+                    }
+                    break;
+                case 'test-running':
+                    resultsView.innerHTML = '<p>Running tests...</p>';
+                    break;
+                case 'testResult':
+                    let resultHtml = '';
+                    switch(message.status) {
+                        case 'Running':
+                            resultsView.innerHTML = `<p>Running test #${message.testCase}...</p>`;
+                            return;
+                        case 'OK':
+                            resultsView.innerHTML = `<p style="color: green;">Test #${message.testCase} Passed</p>`;
+                            break;
+                        case 'WA':
+                            resultHtml += `<p style="color: red;">Wrong Answer on test #${message.testCase}</p>`;
+                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
+                            resultHtml += '<strong>Your Output:</strong><pre>' + message.output + '</pre>';
+                            resultsView.innerHTML = resultHtml;
+                            break;
+                        case 'TLE':
+                            resultHtml += `<p style="color: orange;">Time Limit Exceeded on test #${message.testCase}</p>`;
+                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
+                            resultsView.innerHTML = resultHtml;
+                            break;
+                        case 'MLE':
+                            resultHtml += `<p style="color: orange;">Memory Limit Exceeded on test #${message.testCase}</p>`;
+                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
+                            resultsView.innerHTML = resultHtml;
+                            break;
+                         case 'RUNTIME_ERROR':
+                            resultHtml += `<p style="color: red;">Runtime Error on test #${message.testCase}</p>`;
+                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
+                            if(message.message) resultHtml += '<strong>Error:</strong><pre>' + message.message + '</pre>';
+                            resultsView.innerHTML = resultHtml;
+                            break;
+                        case 'Error':
+                            resultHtml += '<p style="color: red;">Error</p>';
+                            resultHtml += '<pre>' + message.message + '</pre>';
+                            resultsView.innerHTML = resultHtml;
+                            break;
+                    }
+                    break;
+            }
+        });
+
+        vscode.postMessage({ command: 'webview-ready' });
+    </script>
+</body>
+</html>
