@@ -11,7 +11,7 @@ using namespace std;
 // ===================================================================================
 string generator(unsigned seed) {
     mt19937 rng(seed); // A random number generator seeded for reproducibility.
-    uniform_int_distribution<int> dist(1, 1e5);    // for generate random number in an specific range. usage: cout << dist(rng)
+    uniform_int_distribution<int> dist(1, 100000);    // for generate random number in an specific range. usage: cout << dist(rng)
     stringstream cout;   // A stringstream to build the output.
 
     /*
