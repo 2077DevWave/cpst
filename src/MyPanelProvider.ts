@@ -1,28 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as util from 'util';
-import { exec } from 'child_process';
-import * as Diff from 'diff';
-import { StressTestEngine } from './StressTestEngine';
+import { IStressTestEngine, ITestResult, ITestReporter, IFileManager } from './core/interfaces';
 
-const execPromise = util.promisify(exec);
-
-interface ITestResult {
-    testCase: string;
-    userOutput: string;
-    correctOutput: string;
-    type: 'Mismatch' | 'TLE' | 'Passed' | 'Error' | 'MLE' | 'WA' | 'OK' | 'Running' | 'RUNTIME_ERROR';
-    timestamp: string;
-    input?: string;
-    output?: string;
-    time?: number;
-    memory?: number;
-    message?: string;
-}
-
-
-export class MyPanelProvider implements vscode.WebviewViewProvider {
+export class MyPanelProvider implements vscode.WebviewViewProvider, ITestReporter {
 
     public static readonly viewType = 'stress-test-side-panel-view';
     private _view?: vscode.WebviewView;
@@ -41,11 +22,33 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
 
     constructor(
         private readonly _context: vscode.ExtensionContext,
-        statusBarItem: vscode.StatusBarItem
+        statusBarItem: vscode.StatusBarItem,
+        private readonly _stressTestEngine: IStressTestEngine,
+        private readonly _fileManager: IFileManager
     ) {
         this._statusBarItem = statusBarItem;
         this._extensionUri = _context.extensionUri;
     }
+
+    // Implementation of ITestReporter
+    public reportProgress(message: any): void {
+        this._view?.webview.postMessage(message);
+    }
+
+    public reportError(message: string): void {
+        vscode.window.showErrorMessage(message);
+    }
+
+    public reportHistoryCleared(): void {
+        this.clearHistory();
+    }
+
+    public reportTestRunning(): void {
+        this._statusBarItem.text = "$(sync~spin) Stress Tester: Running";
+        this._statusBarItem.show();
+        this._view?.webview.postMessage({ command: 'test-running' });
+    }
+    // End of ITestReporter implementation
 
     private _updateStatusBar() {
         const { Passed, Mismatch, TLE, MLE } = this._resultCounts;
@@ -56,13 +59,13 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
             return;
         }
         
-        const statusText = `P:\${Passed} W:\${Mismatch} T:\${TLE} M:\${MLE}`;
-        this._statusBarItem.text = `$(check) \${statusText}`;
+        const statusText = `P:${Passed} W:${Mismatch} T:${TLE} M:${MLE}`;
+        this._statusBarItem.text = `$(check) ${statusText}`;
         this._statusBarItem.tooltip = `Stress Test Results:
-- Passed: \${Passed}
-- Wrong Answer: \${Mismatch}
-- Time Limit Exceeded: \${TLE}
-- Memory Limit Exceeded: \${MLE}`;
+- Passed: ${Passed}
+- Wrong Answer: ${Mismatch}
+- Time Limit Exceeded: ${TLE}
+- Memory Limit Exceeded: ${MLE}`;
     }
 
     public async updateViewFor(activeFileUri: vscode.Uri | undefined) {
@@ -79,7 +82,7 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
         let solutionUri: vscode.Uri | undefined;
         
         if (activeFileUri.path.endsWith('.genval.cpp') || activeFileUri.path.endsWith('.check.cpp')) {
-            solutionUri = this.getSolutionFileUri(activeFileUri);
+            solutionUri = this._fileManager.getSolutionFileUri(activeFileUri);
         } 
         else if (activeFileUri.path.endsWith('.cpp')) {
             solutionUri = activeFileUri;
@@ -92,8 +95,8 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
         }
 
         this._currentSolutionFile = solutionUri;
-        const genValFileUri = this.getGenValFileUri(solutionUri);
-        const checkerFileUri = this.getCheckerFileUri(solutionUri);
+        const genValFileUri = this._fileManager.getGenValFileUri(solutionUri);
+        const checkerFileUri = this._fileManager.getCheckerFileUri(solutionUri);
 
         try {
             await vscode.workspace.fs.stat(genValFileUri);
@@ -156,24 +159,6 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
         this._updateStatusBar();
         this._view?.webview.postMessage({ command: 'history-cleared' });
     }
-
-    private getSolutionFileUri(testUri: vscode.Uri): vscode.Uri {
-        const testPath = testUri.fsPath;
-        const solutionPath = testPath.replace(/\.(genval|check)\.cpp$/, '.cpp');
-        return vscode.Uri.file(solutionPath);
-    }
-
-    private getGenValFileUri(solutionUri: vscode.Uri): vscode.Uri {
-        const solutionPath = solutionUri.fsPath;
-        const testPath = solutionPath.replace(/\.cpp$/, '.genval.cpp');
-        return vscode.Uri.file(testPath);
-    }
-
-    private getCheckerFileUri(solutionUri: vscode.Uri): vscode.Uri {
-        const solutionPath = solutionUri.fsPath;
-        const testPath = solutionPath.replace(/\.cpp$/, '.check.cpp');
-        return vscode.Uri.file(testPath);
-    }
     
     private async generateTestFiles() {
         if (!this._currentSolutionFile) {
@@ -183,18 +168,18 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
         const genValTemplateUri = vscode.Uri.joinPath(this._extensionUri, 'assets', 'generator_validator_template.cpp');
         const checkerTemplateUri = vscode.Uri.joinPath(this._extensionUri, 'assets', 'checker_template.cpp');
         
-        const genValFileUri = this.getGenValFileUri(this._currentSolutionFile);
-        const checkerFileUri = this.getCheckerFileUri(this._currentSolutionFile);
+        const genValFileUri = this._fileManager.getGenValFileUri(this._currentSolutionFile);
+        const checkerFileUri = this._fileManager.getCheckerFileUri(this._currentSolutionFile);
 
         try {
-            await vscode.workspace.fs.copy(genValTemplateUri, genValFileUri, { overwrite: true });
-            await vscode.workspace.fs.copy(checkerTemplateUri, checkerFileUri, { overwrite: true });
+            await this._fileManager.copyFile(genValTemplateUri, genValFileUri, { overwrite: true });
+            await this._fileManager.copyFile(checkerTemplateUri, checkerFileUri, { overwrite: true });
 
             this.updateViewFor(this._currentSolutionFile);
             vscode.window.showInformationMessage('Stress test files created successfully!');
 
         } catch (error) {
-            vscode.window.showErrorMessage(`Failed to create test files: \${error}`);
+            vscode.window.showErrorMessage(`Failed to create test files: ${error}`);
         }
     }
 
@@ -204,38 +189,19 @@ export class MyPanelProvider implements vscode.WebviewViewProvider {
             return;
         }
 
-        this.clearHistory();
-        this._statusBarItem.text = "$(sync~spin) Stress Tester: Running";
-        this._statusBarItem.show();
-        this._view?.webview.postMessage({ command: 'test-running' });
+        this.reportHistoryCleared();
+        this.reportTestRunning();
 
         const solutionPath = this._currentSolutionFile.fsPath;
-        const dir = path.dirname(solutionPath);
-        
-        const genValPath = this.getGenValFileUri(this._currentSolutionFile).fsPath;
-        const checkerPath = this.getCheckerFileUri(this._currentSolutionFile).fsPath;
+        const genValPath = this._fileManager.getGenValFileUri(this._currentSolutionFile).fsPath;
+        const checkerPath = this._fileManager.getCheckerFileUri(this._currentSolutionFile).fsPath;
 
-        if (!fs.existsSync(genValPath) || !fs.existsSync(checkerPath)) {
+        if (!this._fileManager.exists(genValPath) || !this._fileManager.exists(checkerPath)) {
             this._view?.webview.postMessage({ command: 'error', message: 'Stress test files not found. Please generate them first.' });
             return;
         }
 
-        if (this._view) {
-            const engine = new StressTestEngine(this._context, this._view, dir);
-            engine.runTests(solutionPath, genValPath, checkerPath);
-        }
-    }
-
-    private parseFailureOutput(stdout: string): Omit<ITestResult, 'type' | 'timestamp'> {
-        const inputMatch = stdout.match(/Input:\s*([\s\S]*?)\s*--- YOUR OUTPUT ---/);
-        const userOutputMatch = stdout.match(/--- YOUR OUTPUT ---\s*([\s\S]*?)\s*--- CORRECT OUTPUT ---/);
-        const correctOutputMatch = stdout.match(/--- CORRECT OUTPUT ---\s*([\s\S]*)/);
-
-        return {
-            testCase: inputMatch ? inputMatch[1].trim() : 'Could not parse input.',
-            userOutput: userOutputMatch ? userOutputMatch[1].trim() : 'Could not parse user output.',
-            correctOutput: correctOutputMatch ? correctOutputMatch[1].trim() : 'Could not parse correct output.'
-        };
+        await this._stressTestEngine.runTests(solutionPath, genValPath, checkerPath);
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
