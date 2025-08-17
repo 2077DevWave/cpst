@@ -29,15 +29,15 @@ export class TestRunner implements ITestRunner{
         this._fileManager.writeFile(inputFile, testCase);
         this._fileManager.writeFile(outputFile, userOutput);
 
-        try {
-            await this._executor.runWithLimits(`${checkerExec} ${inputFile} ${outputFile}`, '');
+        const checkerResult = await this._executor.runWithLimits(`${checkerExec} ${inputFile} ${outputFile}`, '');
+
+        // This assumes IExecutionResult is updated to include an optional 'code' property.
+        if (checkerResult.status === 'OK') {
             return { status: 'OK', duration, memory, input: testCase, output: userOutput };
-        } catch (error: any) {
-            if (error.code === 1) { // WA
-                return { status: 'WA', input: testCase, output: userOutput, duration, memory };
-            } else { // Checker error
-                return { status: 'Error', message: `Checker error: ${error.stderr}` };
-            }
+        } else if (checkerResult.code === 1) { // WA from checker
+            return { status: 'WA', input: testCase, output: userOutput, duration, memory };
+        } else { // Checker error or other failures
+            return { status: 'Error', message: `Checker failed with status '${checkerResult.status}': ${checkerResult.stderr}` };
         }
     }
 }
