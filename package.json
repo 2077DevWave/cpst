@@ -2,7 +2,7 @@
   "name": "cpst",
   "displayName": "CPST (Competive Programming Stress Testing)",
   "description": "competive programming stress testing extension (With awesome Template)",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "2077devwave",
   "icon": "media/main_icon.jpg",
   "engines": {
