@@ -6,6 +6,18 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
+#include <sys/stat.h> // For mkdir
+#include <filesystem> // For path manipulation (C++17)
+#include <fstream> // For file output
+#include <iomanip> // For std::put_time, std::setw, std::setfill
+#include <locale> // For std::isspace
+#include <algorithm> // For std::find_if
+#include <vector> // For std::vector
+#include <iostream>
+#include <string>
+#include <map>
+#include <cctype> // for isspace
+
 
 using namespace std;
 
@@ -154,15 +166,324 @@ void print_status(const string& status, const string& color, const string& messa
     cout << "[" << color << status << Color::RESET << "] " << message << endl;
 }
 
+// Helper to trim whitespace from a string
+string trim_whitespace(const string& s) {
+    auto wsfront=find_if_not(s.begin(),s.end(),[](int c){return isspace(c);});
+    auto wsback=find_if_not(s.rbegin(),s.rend(),[](int c){return isspace(c);}).base();
+    return (wsback<=wsfront ? "" : string(wsfront,wsback));
+}
+
+std::string code_point_to_utf8(unsigned int cp) {
+    std::string result;
+    if (cp <= 0x7F) {
+        result += static_cast<char>(cp);
+    } else if (cp <= 0x7FF) {
+        result += static_cast<char>(0xC0 | (cp >> 6));
+        result += static_cast<char>(0x80 | (cp & 0x3F));
+    } else if (cp <= 0xFFFF) {
+        result += static_cast<char>(0xE0 | (cp >> 12));
+        result += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+        result += static_cast<char>(0x80 | (cp & 0x3F));
+    } else if (cp <= 0x10FFFF) {
+        result += static_cast<char>(0xF0 | (cp >> 18));
+        result += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+        result += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+        result += static_cast<char>(0x80 | (cp & 0x3F));
+    }
+    return result;
+}
+
+std::string unescape_json_string(const std::string& s) {
+    std::string unescaped_s;
+    unescaped_s.reserve(s.length()); // Pre-allocate memory for efficiency
+
+    for (size_t i = 0; i < s.length(); ++i) {
+        if (s[i] == '\\') {
+            if (i + 1 < s.length()) {
+                switch (s[i + 1]) {
+                    case '"':  unescaped_s += '"'; i++; break;
+                    case '\\': unescaped_s += '\\'; i++; break;
+                    case 'b':  unescaped_s += '\b'; i++; break;
+                    case 'f':  unescaped_s += '\f'; i++; break;
+                    case 'n':  unescaped_s += '\n'; i++; break;
+                    case 'r':  unescaped_s += '\r'; i++; break;
+                    case 't':  unescaped_s += '\t'; i++; break;
+                    case 'u':
+                        if (i + 5 < s.length()) {
+                            try {
+                                std::string hex_code = s.substr(i + 2, 4);
+                                unsigned int code_point = std::stoul(hex_code, nullptr, 16);
+                                unescaped_s += code_point_to_utf8(code_point);
+                                i += 5;
+                            } catch (const std::invalid_argument& e) {
+                                unescaped_s += s[i]; // Not a valid hex code, keep original
+                            } catch (const std::out_of_range& e) {
+                                unescaped_s += s[i]; // Hex code out of range, keep original
+                            }
+                        } else {
+                            unescaped_s += s[i]; // Malformed \u sequence, keep original
+                        }
+                        break;
+                    default:
+                        // Not a recognized escape sequence, treat backslash as a literal.
+                        unescaped_s += s[i];
+                        break;
+                }
+            } else {
+                // This handles the case of a trailing backslash.
+                unescaped_s += s[i];
+            }
+        } else {
+            unescaped_s += s[i];
+        }
+    }
+    return unescaped_s;
+}
+
+// Helper to split a string by a delimiter
+vector<string> split_string(const string& s, const string& delimiter) {
+    vector<string> tokens;
+    size_t last_pos = 0;
+    size_t pos = s.find(delimiter, 0);
+    while (string::npos != pos) {
+        tokens.push_back(s.substr(last_pos, pos - last_pos));
+        last_pos = pos + delimiter.length();
+        pos = s.find(delimiter, last_pos);
+    }
+    tokens.push_back(s.substr(last_pos, string::npos));
+    return tokens;
+}
+
+// Helper to escape strings for JSON
+string escape_json_string(const string& s) {
+    string escaped_s = "";
+    for (char c : s) {
+        switch (c) {
+            case '"': escaped_s += "\\\""; break;
+            case '\\': escaped_s += "\\\\"; break;
+            case '\b': escaped_s += "\\b"; break;
+            case '\f': escaped_s += "\\f"; break;
+            case '\n': escaped_s += "\\n"; break;
+            case '\r': escaped_s += "\\r"; break;
+            case '\t': escaped_s += "\\t"; break;
+            default:
+                if (iscntrl(c)) {
+                    stringstream ss;
+                    ss << "\\u" << hex << setw(4) << setfill('0') << (int)c;
+                    escaped_s += ss.str();
+                } else {
+                    escaped_s += c;
+                }
+                break;
+        }
+    }
+    escaped_s += "";
+    return escaped_s;
+}
+
+// Helper to serialize a map of string to vector of strings into a JSON string
+string serialize_json_map_of_arrays(const map<string, vector<string>>& data) {
+    stringstream ss;
+    ss << "{\n";
+    bool first_entry = true;
+    for (const auto& pair : data) {
+        if (!first_entry) ss << ",\n";
+        ss << "  \"" << escape_json_string(pair.first) << "\": [";
+        bool first_id = true;
+        for (const string& id : pair.second) {
+            if (!first_id) ss << ", ";
+            ss << "\"" << escape_json_string(id) << "\"";
+            first_id = false;
+        }
+        ss << "]";
+        first_entry = false;
+    }
+    ss << "\n}\n";
+    return ss.str();
+}
+
+static std::string parse_string_token(const std::string& str, size_t& pos);
+
+static void skip_whitespace(const std::string& str, size_t& pos) {
+    while (pos < str.length() && isspace(str[pos])) {
+        pos++;
+    }
+}
+
+static std::string parse_string_token(const std::string& str, size_t& pos) {
+    std::string result;
+    if (pos >= str.length() || str[pos] != '"') {
+        return ""; // Error: expected a quote
+    }
+    pos++; // Skip opening quote
+
+    while (pos < str.length() && str[pos] != '"') {
+        if (str[pos] == '\\') {
+            pos++; // Skip backslash
+            if (pos < str.length()) {
+                switch (str[pos]) {
+                    case '"':  result += '"'; break;
+                    case '\\': result += '\\'; break;
+                    case '/':  result += '/'; break;
+                    case 'b':  result += '\b'; break;
+                    case 'f':  result += '\f'; break;
+                    case 'n':  result += '\n'; break;
+                    case 'r':  result += '\r'; break;
+                    case 't':  result += '\t'; break;
+                    default: // Invalid escape sequence, just add the character
+                        result += str[pos];
+                        break;
+                }
+            }
+        } else {
+            result += str[pos];
+        }
+        pos++;
+    }
+
+    if (pos >= str.length() || str[pos] != '"') {
+        return ""; // Error: unterminated string
+    }
+    pos++; // Skip closing quote
+    return result;
+}
+
+
+std::map<std::string, std::vector<std::string>> parse_json_map_of_arrays(const std::string& json_str) {
+    std::map<std::string, std::vector<std::string>> data;
+    size_t pos = 0;
+
+    skip_whitespace(json_str, pos);
+    if (pos >= json_str.length() || json_str[pos] != '{') return {}; // Must start with {
+    pos++;
+
+    while (pos < json_str.length()) {
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length()) return {}; // Malformed, unexpected end
+        if (json_str[pos] == '}') { // End of object
+            pos++;
+            break;
+        }
+
+        // 1. Parse Key
+        std::string key = parse_string_token(json_str, pos);
+        if (key.empty() && json_str[pos-1] != '"') return {}; // Key parsing failed
+
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length() || json_str[pos] != ':') return {}; // Must have a colon
+        pos++;
+
+        // 2. Parse Value (which must be an array)
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length() || json_str[pos] != '[') return {}; // Value must be an array
+        pos++;
+
+        std::vector<std::string> values;
+        while (pos < json_str.length()) {
+            skip_whitespace(json_str, pos);
+            if (pos >= json_str.length()) return {}; // Malformed array
+            if (json_str[pos] == ']') { // End of array
+                pos++;
+                break;
+            }
+
+            std::string value = parse_string_token(json_str, pos);
+             if (value.empty() && json_str[pos-1] != '"') return {}; // Value parsing failed
+
+            values.push_back(value);
+
+            skip_whitespace(json_str, pos);
+            if (pos >= json_str.length()) return {}; // Malformed
+            if (json_str[pos] == ']') { // End of array
+                pos++;
+                break;
+            }
+            if (json_str[pos] != ',') return {}; // Must have a comma between elements
+            pos++;
+        }
+        data[key] = values;
+
+        skip_whitespace(json_str, pos);
+        if (pos >= json_str.length()) break; // End of string
+        if (json_str[pos] == '}') { // End of object
+            pos++;
+            break;
+        }
+        if (json_str[pos] != ',') return {}; // Must have a comma between pairs
+        pos++;
+    }
+
+    return data;
+}
+
+
 // ===================================================================================
 // MAIN ORCHESTRATOR
 // ===================================================================================
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         print_status("ERROR", Color::RED, "Usage: ./tester <path_to_solution.cpp>");
         return 1;
     }
     string solution_path = argv[1];
+
+    // Extract solution filename
+    std::filesystem::path p(solution_path);
+    string solution_filename = p.stem().string(); // Gets "solution" from "path/to/solution.cpp"
+
+    // Ensure .cpst directory exists
+    string base_output_dir = ".cpst";
+    if (mkdir(base_output_dir.c_str(), 0755) == -1) {
+        if (errno != EEXIST) { // EEXIST means directory already exists
+            print_status("ERROR", Color::RED, "Failed to create base output directory: " + base_output_dir);
+            return 1;
+        }
+    }
+
+    // Generate a unique folder name for this solution run
+    auto now = chrono::system_clock::now();
+    auto in_time_t = chrono::system_clock::to_time_t(now);
+    stringstream ss;
+    ss << put_time(localtime(&in_time_t), "%Y%m%d%H%M%S");
+    string unique_id = solution_filename + "_" + ss.str();
+    string solution_output_dir = base_output_dir + "/" + unique_id;
+
+    if (mkdir(solution_output_dir.c_str(), 0755) == -1) {
+        if (errno != EEXIST) {
+            print_status("ERROR", Color::RED, "Failed to create solution output directory: " + solution_output_dir);
+            return 1;
+        }
+    }
+    string output_dir = solution_output_dir; // Update output_dir to the new unique folder
+    print_status("INFO", Color::BLUE, "Results for this run will be saved in: " + output_dir);
+
+    // Handle solution_map.json
+    string map_file_path = base_output_dir + "/solution_map.json";
+    ifstream map_read_file(map_file_path);
+    string map_content;
+    if (map_read_file.is_open()) {
+        map_content.assign((istreambuf_iterator<char>(map_read_file)), istreambuf_iterator<char>());
+        map_read_file.close();
+    }
+
+    map<string, vector<string>> solution_map = parse_json_map_of_arrays(map_content);
+
+    // Add or update the entry for the current solution_path
+    solution_map[solution_path].push_back(unique_id);
+
+    string new_map_content = serialize_json_map_of_arrays(solution_map);
+
+    ofstream map_write_file(map_file_path);
+    if (map_write_file.is_open()) {
+        map_write_file << new_map_content;
+        map_write_file.close();
+        print_status("INFO", Color::BLUE, "Updated solution_map.json");
+    } else {
+        print_status("ERROR", Color::RED, "Failed to write solution_map.json");
+    }
+
+    print_status("INFO", Color::BLUE, "Compiling external solution...");
 
     print_status("INFO", Color::BLUE, "Compiling external solution...");
     string compile_cmd = COMPILER + " " + COMPILER_FLAGS + " " + solution_path + " -o " + EXTERNAL_EXEC_NAME;
@@ -195,16 +516,33 @@ int main(int argc, char* argv[]) {
         if (result.status == "RUNTIME_ERROR") {
             print_status("RTE", Color::RED, "Runtime Error in external solution. " + perf_info);
             cout << "Input:\n" << input_str << endl;
-            break;
+        }else
+        {
+            result.status = checker(input_str, result.output) ? "OK" : "WA";
+            if (result.status == "OK") {
+                print_status("OK", Color::GREEN, "Test passed! " + perf_info);
+            } else {
+                print_status("WA", Color::RED, "Wrong Answer! " + perf_info);
+                cout << "Input:\n" << input_str << endl;
+                cout << "Your Output:\n" << result.output << endl;
+            }
         }
 
-        if (checker(input_str, result.output)) {
-            print_status("OK", Color::GREEN, "Test passed! " + perf_info);
+        // Prepare JSON output
+        string json_output_filename = output_dir + "/" + solution_filename + ".result" + to_string(i) + ".json";
+        ofstream json_file(json_output_filename);
+        if (!json_file.is_open()) {
+            print_status("ERROR", Color::RED, "Failed to open JSON output file: " + json_output_filename);
         } else {
-            print_status("WA", Color::RED, "Wrong Answer! " + perf_info);
-            cout << "Input:\n" << input_str << endl;
-            cout << "Your Output:\n" << result.output << endl;
-            break;
+            json_file << "{\n";
+            json_file << "  \"testcase_input\": \"" << escape_json_string(input_str) << "\",\n";
+            json_file << "  \"output\": \"" << escape_json_string(result.output) << "\",\n";
+            json_file << "  \"result\": \"" << escape_json_string(result.status) << "\",\n";
+            json_file << "  \"time_ms\": " << result.time_ms << ",\n";
+            json_file << "  \"memory_MB\": " << result.memory_MB << "\n";
+            json_file << "}\n";
+            json_file.close();
+            // print_status("INFO", Color::BLUE, "Results saved to: " + json_output_filename);
         }
     }
 
