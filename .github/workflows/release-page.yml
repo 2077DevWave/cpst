@@ -4,6 +4,11 @@ name: Create Release Page
 on:
   release:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the release to update'
+        required: true
 
 jobs:
   create_release_page:
@@ -21,4 +26,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit ${{ github.event.release.tag_name }} --notes "${{ env.notes }}"
+          TAG_NAME=${{ github.event.release.tag_name || github.event.inputs.tag }}
+          gh release edit "$TAG_NAME" --notes "${{ env.notes }}"
