@@ -41,13 +41,13 @@ export class StressTestEngine implements IStressTestEngine {
             const result = await testRunner.run(executables.solutionExec, executables.generatorExec, executables.checkerExec);
             
             resultManager.save({
-                test_case: i,
-                last_result: result.status,
-                input: result.input,
-                user_output: result.output,
-                exec_time: result.duration,
-                memory_used: result.memory,
-                message: result.message
+                testCase: i,
+                lastResult: result.status,
+                input: result.input || '',
+                userOutput: result.output || '',
+                execTime: result.duration || 0,
+                memoryUsed: result.memory || 0,
+                message: result.message || ''
             });
             
             const progress = {
