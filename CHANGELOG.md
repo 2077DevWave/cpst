@@ -6,4 +6,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-- Initial release
+- Add new GitHub workflow to create release page with last release tag.
+- Update StressTestEngine and ResultManager.
+- Add IJsonResult data type.

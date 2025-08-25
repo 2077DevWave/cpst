@@ -1,0 +1,24 @@
+
+name: Create Release Page
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  create_release_page:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get latest release notes from CHANGELOG.md
+        id: get_release_notes
+        run: |
+          notes=$(sed -n '/^## / { /## \[Unreleased\]/d; N; p; q }' CHANGELOG.md)
+          echo "notes<<EOF" >> $GITHUB_ENV
+          echo "$notes" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Update release page
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit ${{ github.event.release.tag_name }} --notes "${{ env.notes }}"
