@@ -108,11 +108,11 @@ export interface IWorkspaceManager {
 }
 
 export interface IJsonTestResult {
-    test_case: number,
-    last_result?: string,
-    input?: string,
-    user_output?: string,
-    exec_time?: number,
-    memory_used?: number,
-    message?: string
+    testCase: number;
+    lastResult?: string;
+    input?: string;
+    userOutput?: string;
+    execTime?: number;
+    memoryUsed?: number;
+    message?: string;
 }
