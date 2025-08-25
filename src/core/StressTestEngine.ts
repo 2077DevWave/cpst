@@ -43,11 +43,11 @@ export class StressTestEngine implements IStressTestEngine {
             resultManager.save({
                 testCase: i,
                 lastResult: result.status,
-                input: result.input || '',
-                userOutput: result.output || '',
-                execTime: result.duration || 0,
-                memoryUsed: result.memory || 0,
-                message: result.message || ''
+                input: result.input,
+                userOutput: result.output,
+                execTime: result.duration,
+                memoryUsed: result.memory,
+                message: result.message
             });
             
             const progress = {
