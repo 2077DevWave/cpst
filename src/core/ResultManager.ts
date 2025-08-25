@@ -27,8 +27,8 @@ export class ResultManager implements IResultManager {
         this._fileManager.writeFile(this._mainJsonPath, JSON.stringify(mainJson, null, 4));
     }
 
-    public save(result : IJsonTestResult): void {
-        const resultFilePath = path.join(this._runFolderPath, `test_${result.test_case}.json`);
+    public save(result: IJsonTestResult): void {
+        const resultFilePath = path.join(this._runFolderPath, `test_${result.testCase}.json`);
         this._fileManager.writeFile(resultFilePath, JSON.stringify(result, null, 4));
     }
 }
