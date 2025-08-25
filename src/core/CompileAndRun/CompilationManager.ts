@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { ICompilationManager, ICompiler, IExecutablePaths } from './interfaces';
+import { ICompilationManager, ICompiler } from '../Interfaces/classes';
+import { IExecutablePaths } from '../Interfaces/datastructures';
 
 export class CompilationManager implements ICompilationManager {
     constructor(

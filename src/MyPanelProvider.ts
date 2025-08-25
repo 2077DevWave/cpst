@@ -1,12 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import {
-  IStressTestEngine,
-  ITestResult,
-  ITestReporter,
-  IFileManager,
-} from "./core/interfaces";
+import { IFileManager, IStressTestEngine, ITestReporter } from "./core/Interfaces/classes";
+import { ITestResult } from "./core/Interfaces/datastructures";
 
 export class MyPanelProvider
   implements vscode.WebviewViewProvider, ITestReporter

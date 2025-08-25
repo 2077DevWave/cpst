@@ -1,9 +1,9 @@
 import * as path from 'path';
-import { ICompiler, IExecutor, IFileManager, IStressTestEngine, ITestReporter, IJsonTestResult } from './interfaces';
-import { WorkspaceManager } from './WorkspaceManager';
-import { CompilationManager } from './CompilationManager';
-import { TestRunner } from './TestRunner';
-import { ResultManager } from './ResultManager';
+import { WorkspaceManager } from './Managers/WorkspaceManager';
+import { CompilationManager } from './CompileAndRun/CompilationManager';
+import { TestRunner } from './CompileAndRun/TestRunner';
+import { ResultManager } from './Managers/ResultManager';
+import { ICompiler, IExecutor, IFileManager, IStressTestEngine, ITestReporter } from './Interfaces/classes';
 
 export class StressTestEngine implements IStressTestEngine {
     constructor(

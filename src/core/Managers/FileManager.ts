@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { IFileManager } from './interfaces';
+import { IFileManager } from '../Interfaces/classes';
 
 export class FileManager implements IFileManager {
     public createDirectory(dirPath: string): void {

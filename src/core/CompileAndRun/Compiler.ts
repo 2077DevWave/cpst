@@ -2,7 +2,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
-import { ICompiler, ITestReporter } from './interfaces';
+import { ICompiler, ITestReporter } from '../Interfaces/classes';
 
 const execAsync = promisify(exec);
 

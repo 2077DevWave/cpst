@@ -1,7 +1,6 @@
 import * as path from 'path';
-import { IFileManager, ITestPaths, IWorkspaceManager } from './interfaces';
-
-
+import { IFileManager, IWorkspaceManager } from '../Interfaces/classes';
+import { ITestPaths } from '../Interfaces/datastructures';
 
 export class WorkspaceManager implements IWorkspaceManager{
     constructor(
