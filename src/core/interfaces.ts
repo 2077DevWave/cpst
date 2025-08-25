@@ -95,7 +95,7 @@ export interface ICompilationManager {
 
 export interface IResultManager {
     initialize(): void;
-    save(testCaseNumber: number, result: ITestRunResult): void;
+    save(result: IJsonTestResult): void;
 }
 
 export interface ITestRunner {
@@ -105,4 +105,14 @@ export interface ITestRunner {
 export interface IWorkspaceManager {
     setup(solutionPath: string): ITestPaths;
     cleanup(paths: string[]): void;
+}
+
+export interface IJsonTestResult {
+    testCase: number;
+    lastResult?: string;
+    input?: string;
+    userOutput?: string;
+    execTime?: number;
+    memoryUsed?: number;
+    message?: string;
 }

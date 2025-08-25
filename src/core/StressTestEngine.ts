@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { ICompiler, IExecutor, IFileManager, IStressTestEngine, ITestReporter } from './interfaces';
+import { ICompiler, IExecutor, IFileManager, IStressTestEngine, ITestReporter, IJsonTestResult } from './interfaces';
 import { WorkspaceManager } from './WorkspaceManager';
 import { CompilationManager } from './CompilationManager';
 import { TestRunner } from './TestRunner';
@@ -40,7 +40,15 @@ export class StressTestEngine implements IStressTestEngine {
 
             const result = await testRunner.run(executables.solutionExec, executables.generatorExec, executables.checkerExec);
             
-            resultManager.save(i, result);
+            resultManager.save({
+                testCase: i,
+                lastResult: result.status,
+                input: result.input,
+                userOutput: result.output,
+                execTime: result.duration,
+                memoryUsed: result.memory,
+                message: result.message
+            });
             
             const progress = {
                 command: 'testResult',
