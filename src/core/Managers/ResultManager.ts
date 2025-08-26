@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { IFileManager, ITestRunResult, IResultManager, IJsonTestResult} from './interfaces';
+import { IFileManager, IResultManager } from '../Interfaces/classes';
+import { IJsonTestResult } from '../Interfaces/datastructures';
 
 export class ResultManager implements IResultManager {
     constructor(

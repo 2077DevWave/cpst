@@ -2,9 +2,9 @@
 import * as vscode from 'vscode';
 import { MyPanelProvider } from './MyPanelProvider';
 import { StressTestEngine } from './core/StressTestEngine';
-import { Compiler } from './core/Compiler';
-import { Executor } from './core/Executor';
-import { FileManager } from './core/FileManager';
+import { Compiler } from './core/CompileAndRun/Compiler';
+import { Executor } from './core/CompileAndRun/Executor';
+import { FileManager } from './core/Managers/FileManager';
 import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {

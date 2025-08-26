@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { IExecutor, IFileManager, ITestRunResult, ITestRunner} from './interfaces';
+import { IExecutor, IFileManager, ITestRunner } from '../Interfaces/classes';
+import { ITestRunResult } from '../Interfaces/datastructures';
 
 export class TestRunner implements ITestRunner{
     constructor(

@@ -1,6 +1,7 @@
 
 import { exec, ExecOptions } from 'child_process';
-import { IExecutor, IExecutionResult, IRawExecutionResult, IExecutionOptionsConfig} from './interfaces';
+import { IExecutor } from '../Interfaces/classes';
+import { IExecutionOptionsConfig, IExecutionResult, IRawExecutionResult } from '../Interfaces/datastructures';
 
 export class Executor implements IExecutor {
     private readonly defaultOptions: IExecutionOptionsConfig = {
