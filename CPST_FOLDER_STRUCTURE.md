@@ -48,7 +48,7 @@ Within each session folder, there are multiple JSON files, one for each test cas
     "testCase": 1,
     "lastResult": "OK",
     "input": "59",
-    "userOutput": "NOn",
+    "userOutput": "No",
     "execTime": 11.418831,
     "memoryUsed": 0,
     "message": ""
