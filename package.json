@@ -15,6 +15,11 @@
     "type": "git",
     "url": "https://github.com/2077devwave/cpst.git"
   },
+  "files": [
+    "out",
+    "media",
+    "assets"
+  ],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -38,7 +43,8 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build",
+    "build": "npm run compile && cp src/webview.html out/ && cp -r assets out/",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
