@@ -1,78 +1,69 @@
-# Project Overview: C++ Stress Tester (CPST)
+# Project Overview
 
-This project is a Visual Studio Code extension designed to enhance the competitive programming workflow for C++ users. It automates the process of generating stress test files, compiling C++ solutions, and executing them against custom test cases. The extension provides a user-friendly interface within a VS Code side panel to manage and view test results, including execution time and memory usage.
+This project is a Visual Studio Code extension called **C++ Stress Tester (CPST)**. It is designed to streamline the workflow for competitive programmers who use C++ to solve problems. The extension allows users to quickly generate a stress testing environment for their C++ solutions, including a test case generator, a validator, and a checker. It also provides a simple interface to compile and run the stress tests and view the results.
 
-## Key Features:
-- **One-Click Test File Generation:** Automatically creates C++ stress test files (`.genval.cpp` and `.check.cpp`) from robust templates.
-- **Integrated Compile & Run:** Compiles user solutions and generated test files, then runs the stress tests directly within the VS Code integrated terminal.
-- **Context-Aware UI:** The side panel dynamically updates based on the active C++ file, showing relevant actions (generate or run tests).
-- **Comprehensive C++ Templates:** The generated test files include structured sections for test case generation (`generator()`), input validation (`validator()`), and output checking (`checker()`), along with resource monitoring.
+The extension is written in **TypeScript** and uses the VS Code Extension API. The user interface is a webview panel in the sidebar, which is built with HTML, CSS, and JavaScript.
 
-## Technologies Used:
-- **TypeScript:** For the core VS Code extension logic.
-- **C++:** For user solutions and the generated stress testing templates.
-- **HTML/CSS/JavaScript:** For the interactive webview UI within the VS Code side panel.
-- **Node.js:** As the runtime environment for the TypeScript extension.
-- **ESLint:** For code linting and style enforcement.
-- **@google/generative-ai:** Included as a dependency, suggesting potential or planned integration of AI capabilities.
+## Key Technologies
 
-## Project Architecture:
-The extension's main entry point is `src/extension.ts`, which activates and initializes key components. The user interface is provided by `MyPanelProvider` which manages a webview (`webview.html`) displayed in a VS Code side panel. This provider interacts with a `StressTestEngine` that orchestrates the testing process. The `StressTestEngine` utilizes `Compiler`, `Executor`, and `FileManager` components to handle compilation, execution, and file operations. Generated test files and temporary assets are stored in a `.cpst` directory within the user's workspace.
+*   **TypeScript:** The primary language for the extension's source code.
+*   **Node.js:** The runtime environment for the extension.
+*   **VS Code Extension API:** The API used to interact with the VS Code editor and UI.
+*   **HTML/CSS/JavaScript:** Used for the webview-based user interface.
+*   **g++:** The C++ compiler used to compile the user's solution and test files.
 
-## Building and Running:
+## Architecture
 
-### Development Commands:
-- **Compile TypeScript:**
-  ```bash
-  npm run compile
-  # or
-  tsc -p ./
-  ```
-- **Watch for changes and recompile automatically:**
-  ```bash
-  npm run watch
-  # or
-  tsc -watch -p ./
-  ```
-- **Run Linter:**
-  ```bash
-  npm run lint
-  # or
-  eslint src
-  ```
-- **Run Tests:**
-  ```bash
-  npm run test
-  # or
-  vscode-test
-  ```
-- **Run Extension (Development Host):**
-  To run the extension in a development environment, open this project in VS Code and press `F5`. This will open a new VS Code window with the extension loaded.
+The extension is composed of several key components:
 
-### Pre-publish Script:
-- **Prepare for publishing (compiles TypeScript):**
-  ```bash
-  npm run vscode:prepublish
-  ```
+*   **`extension.ts`:** The main entry point of the extension. It registers the webview provider and other components.
+*   **`MyPanelProvider.ts`:** A `WebviewViewProvider` that manages the webview panel in the sidebar. It handles the UI and communication between the webview and the extension's core logic.
+*   **`StressTestEngine.ts`:** The core of the extension's logic. It orchestrates the entire stress testing process, including file management, compilation, execution, and result reporting.
+*   **`webview.html`:** The HTML file that defines the structure of the webview panel.
+*   **`assets` directory:** Contains the C++ templates for the generator/validator and checker.
 
-## Development Conventions:
+# Building and Running
 
-### Language and Tooling:
-- **Primary Language:** TypeScript
-- **Linting:** ESLint is configured using `eslint.config.mjs` with `@typescript-eslint` plugin.
-- **Type Checking:** Strict type checking is enabled in `tsconfig.json`.
+## Prerequisites
 
-### Coding Style:
-- ESLint rules enforce `curly` braces, `eqeqeq` (strict equality), `no-throw-literal`, and `semi`colons.
-- Import statements follow `camelCase` or `PascalCase` naming conventions.
+*   [Node.js and npm](https://nodejs.org/)
+*   [Visual Studio Code](https://code.visualstudio.com/)
+*   A C++ compiler (e.g., `g++`) in the system's PATH.
 
-### Testing:
-- Unit and integration tests for the extension are written in TypeScript and executed using `vscode-test`.
-- Test files are typically located in the `src/test/` directory (e.g., `src/test/extension.test.ts`).
+## Building the Extension
 
-### File Structure:
-- `src/`: Contains the main TypeScript source code for the extension.
-- `src/core/`: Houses core functionalities like `Compiler`, `Executor`, `FileManager`, and `StressTestEngine`.
-- `assets/`: Stores C++ template files (`checker_template.cpp`, `generator_validator_template.cpp`) used for generating stress test boilerplate.
-- `media/`: Contains icons and other media assets for the extension.
-- `.cpst/`: (Created at runtime) A hidden directory within the workspace used by the extension to store generated test files and temporary assets.
+To build the extension, run the following command:
+
+```bash
+npm run build
+```
+
+This will compile the TypeScript code to the `out` directory and copy the necessary assets.
+
+## Running the Extension in the VS Code Development Host
+
+To run the extension in a new VS Code window for development and testing, press `F5` in VS Code, or run the following command:
+
+```bash
+npm run test
+```
+
+# Development Conventions
+
+## Coding Style
+
+The project uses [ESLint](https://eslint.org/) to enforce a consistent coding style. The ESLint configuration can be found in the `eslint.config.mjs` file. To check for linting errors, run:
+
+```bash
+npm run lint
+```
+
+## Testing
+
+The project uses [Mocha](https://mochajs.org/) as the test framework. The tests are located in the `src/test` directory. To run the tests, use the following command:
+
+```bash
+npm run test
+```
+
+This will compile the code, run the linter, and then run the tests using the VS Code Test CLI.

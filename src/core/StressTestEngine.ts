@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { WorkspaceManager } from './Managers/WorkspaceManager';
+import { CPSTFolderManager } from './Managers/CPSTFolderManager';
 import { CompilationManager } from './CompileAndRun/CompilationManager';
 import { TestRunner } from './CompileAndRun/TestRunner';
 import { ResultManager } from './Managers/ResultManager';
@@ -15,15 +15,15 @@ export class StressTestEngine implements IStressTestEngine {
     ) {}
 
     public async runTests(solutionPath: string, generatorValidatorPath: string, checkerPath: string): Promise<void> {
-        const workspaceManager = new WorkspaceManager(this._fileManager, this._baseDir);
-        const paths = workspaceManager.setup(solutionPath);
+        const CpstFolderManager = new CPSTFolderManager(this._fileManager, this._baseDir);
+        const paths = CpstFolderManager.setup(solutionPath);
 
         const compilationManager = new CompilationManager(this._compiler, paths.tempDir);
         const executables = await compilationManager.compile(solutionPath, generatorValidatorPath, checkerPath);
 
         if (!executables) {
             this._reporter.reportError("Compilation failed.");
-            workspaceManager.cleanup([paths.tempDir]);
+            CpstFolderManager.cleanup([paths.tempDir]);
             return;
         }
 
@@ -67,6 +67,6 @@ export class StressTestEngine implements IStressTestEngine {
             }
         }
         
-        workspaceManager.cleanup([paths.tempDir]);
+        CpstFolderManager.cleanup([paths.tempDir]);
     }
 }

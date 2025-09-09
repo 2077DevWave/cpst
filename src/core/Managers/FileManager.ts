@@ -31,6 +31,13 @@ export class FileManager implements IFileManager {
         });
     }
 
+    public listDirectory(dirPath: string): string[] {
+        if (!fs.existsSync(dirPath)) {
+            return [];
+        }
+        return fs.readdirSync(dirPath);
+    }
+
     public getSolutionFileUri(testUri: vscode.Uri): vscode.Uri {
         const testPath = testUri.fsPath;
         const solutionPath = testPath.replace(/\.(genval|check)\.cpp$/, '.cpp');

@@ -19,6 +19,7 @@ export interface IFileManager {
     readFile(path: string): string;
     exists(path: string): boolean;
     cleanup(files: string[]): void;
+    listDirectory(path: string): string[];
     getSolutionFileUri(testUri: vscode.Uri): vscode.Uri;
     getGenValFileUri(solutionUri: vscode.Uri): vscode.Uri;
     getCheckerFileUri(solutionUri: vscode.Uri): vscode.Uri;
@@ -45,7 +46,12 @@ export interface ITestRunner {
     run(solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult>;
 }
 
-export interface IWorkspaceManager {
+export interface ICPSTFolderManager {
     setup(solutionPath: string): ITestPaths;
+    initializeTestRun(solutionName: string, runFolderName: string, mainJsonPath: string): void;
+    saveResult(runFolderPath: string, result: IJsonTestResult): void;
+    getSolutions(): string[];
+    getRuns(solutionName: string): string[];
+    getTestResults(solutionName: string, runId: string): IJsonTestResult[];
     cleanup(paths: string[]): void;
 }
