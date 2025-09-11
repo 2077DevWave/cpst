@@ -1,19 +1,24 @@
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { MyPanelProvider } from './MyPanelProvider';
-import { StressTestEngine } from './core/StressTestEngine';
 import { Compiler } from './core/CompileAndRun/Compiler';
 import { Executor } from './core/CompileAndRun/Executor';
 import { FileManager } from './core/Managers/FileManager';
-import * as path from 'path';
+import { CPSTFolderManager } from './core/Managers/CPSTFolderManager';
+import { TestFileService } from './core/Services/TestFileService';
+import { CompilationService } from './core/Services/CompilationService';
+import { TestRunnerService } from './core/Services/TestRunnerService';
+import { ResultService } from './core/Services/ResultService';
+import { OrchestrationService } from './core/Services/OrchestrationService';
+import { UIService } from './core/Services/UIService';
+import { TestReporterProxy } from './core/TestReporterProxy';
 
 export function activate(context: vscode.ExtensionContext) {
 
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = MyPanelProvider.viewType;
     context.subscriptions.push(statusBarItem);
-
-    const fileManager = new FileManager();
 
     // Determine the base directory from the workspace folder
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -22,21 +27,43 @@ export function activate(context: vscode.ExtensionContext) {
         return;
     }
     const baseDir = path.join(workspaceFolder.uri.fsPath, '.cpst');
-    
-    // Create provider without the engine first
-    const provider = new MyPanelProvider(context, statusBarItem, fileManager);
 
-    // Create engine, passing provider as the reporter
-    const stressTestEngine = new StressTestEngine(
-        new Compiler(provider),
-        new Executor(),
-        fileManager,
-        provider,
-        baseDir
+    // --- Dependency Injection Container ---
+
+    // Singletons
+    const fileManager = new FileManager();
+    const cpstFolderManager = new CPSTFolderManager(fileManager, baseDir);
+    const executor = new Executor();
+    const testReporterProxy = new TestReporterProxy();
+
+    const compiler = new Compiler(testReporterProxy);
+
+    // Core Services
+    const testFileService = new TestFileService(fileManager, context.extensionUri);
+    const compilationService = new CompilationService(compiler, cpstFolderManager);
+    const testRunnerService = new TestRunnerService(executor, fileManager, cpstFolderManager);
+    const resultService = new ResultService(fileManager, cpstFolderManager);
+    
+    const orchestrationService = new OrchestrationService(
+        compilationService,
+        testRunnerService,
+        resultService,
+        cpstFolderManager,
+        testReporterProxy
     );
 
-    // Now, inject the engine into the provider
-    provider.setStressTestEngine(stressTestEngine);
+    const uiService = new UIService(
+        fileManager,
+        testFileService,
+        orchestrationService,
+        testReporterProxy
+    );
+
+    // UI Layer
+    const provider = new MyPanelProvider(context, statusBarItem, uiService);
+    testReporterProxy.proxy = provider;
+
+    // --- End of Dependency Injection ---
 
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(MyPanelProvider.viewType, provider, {

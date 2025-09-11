@@ -98,6 +98,14 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         return results;
     }
 
+    public getTempDir(): string {
+        return path.join(this._baseDir, 'temp');
+    }
+
+    public getPaths(solutionPath: string): ITestPaths {
+        return this.setup(solutionPath);
+    }
+
     public cleanup(paths: string[]): void {
         this._fileManager.cleanup(paths);
     }

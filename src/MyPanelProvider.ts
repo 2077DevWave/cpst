@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { IFileManager, IStressTestEngine, ITestReporter } from "./core/Interfaces/classes";
+import { ITestReporter } from "./core/Interfaces/classes";
 import { ITestResult } from "./core/Interfaces/datastructures";
+import { IUIService } from "./core/Interfaces/services";
 
 export class MyPanelProvider
   implements vscode.WebviewViewProvider, ITestReporter
 {
   public static readonly viewType = "stress-test-side-panel-view";
   private _view?: vscode.WebviewView;
-  private _currentSolutionFile?: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
   private _history: ITestResult[] = [];
   private _statusBarItem: vscode.StatusBarItem;
@@ -25,16 +25,10 @@ export class MyPanelProvider
   constructor(
     private readonly _context: vscode.ExtensionContext,
     statusBarItem: vscode.StatusBarItem,
-    private readonly _fileManager: IFileManager
+    private readonly _uiService: IUIService
   ) {
     this._statusBarItem = statusBarItem;
     this._extensionUri = _context.extensionUri;
-  }
-
-  private _stressTestEngine!: IStressTestEngine; // or IStressTestEngine | undefined
-
-  public setStressTestEngine(engine: IStressTestEngine) {
-    this._stressTestEngine = engine;
   }
 
   // Implementation of ITestReporter
@@ -75,53 +69,8 @@ export class MyPanelProvider
 - Memory Limit Exceeded: ${MLE}`;
   }
 
-  public async updateViewFor(activeFileUri: vscode.Uri | undefined) {
-    if (!this._view) {
-      return;
-    }
-
-    if (!activeFileUri) {
-      this._currentSolutionFile = undefined;
-      this._view.webview.postMessage({ command: "show-initial-state" });
-      return;
-    }
-
-    let solutionUri: vscode.Uri | undefined;
-
-    if (
-      activeFileUri.path.endsWith(".genval.cpp") ||
-      activeFileUri.path.endsWith(".check.cpp")
-    ) {
-      solutionUri = this._fileManager.getSolutionFileUri(activeFileUri);
-    } else if (activeFileUri.path.endsWith(".cpp")) {
-      solutionUri = activeFileUri;
-    }
-
-    if (!solutionUri) {
-      this._currentSolutionFile = undefined;
-      this._view.webview.postMessage({ command: "show-initial-state" });
-      return;
-    }
-
-    this._currentSolutionFile = solutionUri;
-    const genValFileUri = this._fileManager.getGenValFileUri(solutionUri);
-    const checkerFileUri = this._fileManager.getCheckerFileUri(solutionUri);
-
-    try {
-      await vscode.workspace.fs.stat(genValFileUri);
-      await vscode.workspace.fs.stat(checkerFileUri);
-      this._view.webview.postMessage({
-        command: "update-view",
-        testFileExists: true,
-        solutionFilename: path.basename(this._currentSolutionFile.fsPath),
-      });
-    } catch {
-      this._view.webview.postMessage({
-        command: "update-view",
-        testFileExists: false,
-        solutionFilename: path.basename(this._currentSolutionFile.fsPath),
-      });
-    }
+  public updateViewFor(activeFileUri: vscode.Uri | undefined) {
+    this._uiService.updateActiveFile(activeFileUri);
   }
 
   public resolveWebviewView(
@@ -144,10 +93,10 @@ export class MyPanelProvider
           this.updateViewFor(vscode.window.activeTextEditor?.document.uri);
           return;
         case "generate":
-          await this.generateTestFiles();
+          await this._uiService.generateTestFiles();
           return;
         case "run":
-          this.runStressTest();
+          this._uiService.runStressTest();
           return;
       }
     });
@@ -167,83 +116,6 @@ export class MyPanelProvider
     };
     this._updateStatusBar();
     this._view?.webview.postMessage({ command: "history-cleared" });
-  }
-
-  private async generateTestFiles() {
-    if (!this._currentSolutionFile) {
-      vscode.window.showErrorMessage("No active C++ solution file selected.");
-      return;
-    }
-    const genValTemplateUri = vscode.Uri.joinPath(
-      this._extensionUri,
-      "assets",
-      "generator_validator_template.cpp"
-    );
-    const checkerTemplateUri = vscode.Uri.joinPath(
-      this._extensionUri,
-      "assets",
-      "checker_template.cpp"
-    );
-
-    const genValFileUri = this._fileManager.getGenValFileUri(
-      this._currentSolutionFile
-    );
-    const checkerFileUri = this._fileManager.getCheckerFileUri(
-      this._currentSolutionFile
-    );
-
-    try {
-      await this._fileManager.copyFile(genValTemplateUri, genValFileUri, {
-        overwrite: true,
-      });
-      await this._fileManager.copyFile(checkerTemplateUri, checkerFileUri, {
-        overwrite: true,
-      });
-
-      this.updateViewFor(this._currentSolutionFile);
-      vscode.window.showInformationMessage(
-        "Stress test files created successfully!"
-      );
-    } catch (error) {
-      vscode.window.showErrorMessage(`Failed to create test files: ${error}`);
-    }
-  }
-
-  private async runStressTest() {
-    if (!this._currentSolutionFile) {
-      vscode.window.showErrorMessage(
-        "Cannot run test: Could not determine the solution file."
-      );
-      return;
-    }
-
-    this.reportHistoryCleared();
-    this.reportTestRunning();
-
-    const solutionPath = this._currentSolutionFile.fsPath;
-    const genValPath = this._fileManager.getGenValFileUri(
-      this._currentSolutionFile
-    ).fsPath;
-    const checkerPath = this._fileManager.getCheckerFileUri(
-      this._currentSolutionFile
-    ).fsPath;
-
-    if (
-      !this._fileManager.exists(genValPath) ||
-      !this._fileManager.exists(checkerPath)
-    ) {
-      this._view?.webview.postMessage({
-        command: "error",
-        message: "Stress test files not found. Please generate them first.",
-      });
-      return;
-    }
-
-    await this._stressTestEngine.runTests(
-      solutionPath,
-      genValPath,
-      checkerPath
-    );
   }
 
   private _getHtmlForWebview(webview: vscode.Webview): string {

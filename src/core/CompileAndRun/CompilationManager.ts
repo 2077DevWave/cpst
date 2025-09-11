@@ -13,9 +13,9 @@ export class CompilationManager implements ICompilationManager {
         const generatorExec = path.join(this._tempDir, "generator_exec");
         const checkerExec = path.join(this._tempDir, "checker_exec");
 
-        if (!await this._compiler.compile(solutionPath, solutionExec)) {return null};
-        if (!await this._compiler.compile(generatorValidatorPath, generatorExec)) {return null};
-        if (!await this._compiler.compile(checkerPath, checkerExec)) {return null};
+        if (!await this._compiler.compile(solutionPath, solutionExec)) {return null;};
+        if (!await this._compiler.compile(generatorValidatorPath, generatorExec)) {return null;};
+        if (!await this._compiler.compile(checkerPath, checkerExec)) {return null;};
 
         return { solutionExec, generatorExec, checkerExec };
     }
