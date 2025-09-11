@@ -1,14 +1,13 @@
 
-import { ITestReporter } from '../Interfaces/classes';
+import { ITestReporter, ICPSTFolderManager } from '../Interfaces/classes';
 import { ICompilationService, IOrchestrationService, IResultService, ITestRunnerService } from '../Interfaces/services';
-import { CPSTFolderManager } from '../Managers/CPSTFolderManager';
 
 export class OrchestrationService implements IOrchestrationService {
     constructor(
         private readonly _compilationService: ICompilationService,
         private readonly _testRunnerService: ITestRunnerService,
         private readonly _resultService: IResultService,
-        private readonly _cpstFolderManager: CPSTFolderManager,
+        private readonly _cpstFolderManager: ICPSTFolderManager,
         private readonly _reporter: ITestReporter
     ) {}
 

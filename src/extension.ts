@@ -8,6 +8,7 @@ import { FileManager } from './core/Managers/FileManager';
 import { CPSTFolderManager } from './core/Managers/CPSTFolderManager';
 import { TestFileService } from './core/Services/TestFileService';
 import { CompilationService } from './core/Services/CompilationService';
+import { CompilationManager } from './core/CompileAndRun/CompilationManager';
 import { TestRunnerService } from './core/Services/TestRunnerService';
 import { ResultService } from './core/Services/ResultService';
 import { OrchestrationService } from './core/Services/OrchestrationService';
@@ -37,10 +38,11 @@ export function activate(context: vscode.ExtensionContext) {
     const testReporterProxy = new TestReporterProxy();
 
     const compiler = new Compiler(testReporterProxy);
+    const compilationManager = new CompilationManager(compiler, baseDir);
 
     // Core Services
     const testFileService = new TestFileService(fileManager, context.extensionUri);
-    const compilationService = new CompilationService(compiler, cpstFolderManager);
+    const compilationService = new CompilationService(compiler, cpstFolderManager, compilationManager);
     const testRunnerService = new TestRunnerService(executor, fileManager, cpstFolderManager);
     const resultService = new ResultService(fileManager, cpstFolderManager);
     

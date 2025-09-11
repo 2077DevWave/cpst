@@ -219,4 +219,15 @@ export interface ICPSTFolderManager {
      * @param paths An array of paths to delete.
      */
     cleanup(paths: string[]): void;
+    /**
+     * Gets the path to the temporary directory.
+     * @returns The absolute path to the temporary directory.
+     */
+    getTempDir(): string;
+    /**
+     * Gets all relevant paths for a test run, including temporary and results directories.
+     * @param solutionPath The path to the solution file.
+     * @returns An object containing all relevant paths.
+     */
+    getPaths(solutionPath: string): ITestPaths;
 }
