@@ -22,7 +22,7 @@ export class OrchestrationService implements IOrchestrationService {
             return;
         }
 
-        const numTests = 100;
+        const numTests = 100; // TODO: Make this configurable
         for (let i = 1; i <= numTests; i++) {
             this._reporter.reportProgress({ command: 'testResult', status: 'Running', testCase: i });
 
