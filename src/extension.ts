@@ -14,7 +14,6 @@ import { ResultService } from './core/Services/ResultService';
 import { OrchestrationService } from './core/Services/OrchestrationService';
 import { UIService } from './core/Services/UIService';
 import { TestReporterProxy } from './core/TestReporterProxy';
-import { ResultManager } from './core/Managers/ResultManager';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -35,7 +34,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Singletons
     const fileManager = new FileManager();
     const cpstFolderManager = new CPSTFolderManager(fileManager, baseDir);
-    const resultManager = new ResultManager(cpstFolderManager);
     const executor = new Executor();
     const testReporterProxy = new TestReporterProxy();
 
@@ -46,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
     const testFileService = new TestFileService(fileManager, context.extensionUri);
     const compilationService = new CompilationService(compiler, cpstFolderManager, compilationManager);
     const testRunnerService = new TestRunnerService(executor, fileManager, cpstFolderManager);
-    const resultService = new ResultService(resultManager, cpstFolderManager);
+    const resultService = new ResultService(cpstFolderManager);
     
     const orchestrationService = new OrchestrationService(
         compilationService,
