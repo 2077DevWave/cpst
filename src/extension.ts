@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
     const testReporterProxy = new TestReporterProxy();
 
     const compiler = new Compiler(testReporterProxy);
-    const compilationManager = new CompilationManager(compiler, baseDir);
+    const compilationManager = new CompilationManager(compiler, cpstFolderManager.getTempDir());
 
     // Core Services
     const testFileService = new TestFileService(fileManager, context.extensionUri);
