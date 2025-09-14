@@ -9,13 +9,6 @@ export class Executor implements IExecutor {
         maxBuffer: 1024 * 1024 * 512, // 512 MB
     };
 
-    /**
-     * Runs a command with specified resource limits.
-     * @param command The command to execute.
-     * @param input The input string to pass to the command's stdin.
-     * @param options Optional configuration to override default execution limits.
-     * @returns A promise that resolves to an ExecutionResult.
-     */
     public async runWithLimits(command: string, input: string, options?: Partial<IExecutionOptionsConfig>): Promise<IExecutionResult> {
         const executionOptions = { ...this.defaultOptions, ...options };
         
@@ -31,24 +24,11 @@ export class Executor implements IExecutor {
         };
     }
 
-    /**
-     * Calculates the duration in milliseconds from a process.hrtime start tuple.
-     * @param start The result of a previous process.hrtime() call.
-     * @returns The duration in milliseconds.
-     */
     private calculateDuration(start: [number, number]): number {
         const diff = process.hrtime(start);
         return (diff[0] * 1e9 + diff[1]) / 1e6; // convert to ms
     }
 
-    /**
-     * Executes a shell command and captures its raw output.
-     * This method encapsulates the logic of interacting with a child process.
-     * @param command The command to execute.
-     * @param input The input to pipe to the process's stdin.
-     * @param options The execution options (timeout, maxBuffer).
-     * @returns A promise that resolves to a RawExecutionResult.
-     */
     private executeCommand(command: string, input: string, options: IExecutionOptionsConfig): Promise<IRawExecutionResult> {
         const start = process.hrtime();
         const execOptions: ExecOptions = {
@@ -81,12 +61,6 @@ export class Executor implements IExecutor {
         });
     }
 
-    /**
-     * Determines the execution status based on the raw result from the process.
-     * This method isolates the logic for interpreting process exit signals and codes.
-     * @param result The RawExecutionResult from the executed command.
-     * @returns A status string (e.g., 'OK', 'TLE', 'MLE', 'RUNTIME_ERROR').
-     */
     private determineStatus(result: IRawExecutionResult): string {
         if (result.signal === 'SIGTERM') {
             return 'TLE';
