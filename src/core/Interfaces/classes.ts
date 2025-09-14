@@ -145,21 +145,6 @@ export interface ICompilationManager {
 }
 
 /**
- * Defines the contract for managing test results.
- */
-export interface IResultManager {
-    /**
-     * Initializes the result storage for a new test run.
-     */
-    initialize(paths: ITestPaths): void;
-    /**
-     * Saves the result of a single test case.
-     * @param result The test result to save.
-     */
-    save(result: IJsonTestResult, paths: ITestPaths): void;
-}
-
-/**
  * Defines the contract for running a single test case.
  */
 export interface ITestRunner {

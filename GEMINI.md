@@ -88,14 +88,14 @@ Act as a senior software engineer and architect. When you generate code, you mus
 ### 3. Testing:
 
 *   **Design for Testability:** All code must be designed to be easily unit-tested. This means avoiding static classes and methods where possible and preferring dependency injection.
-*   **Write Unit Tests:** For any C# code you write, also provide a corresponding unit test class.
-*   **Use Modern Testing Libraries:** Use NSubstitute for mocking dependencies and FluentAssertions for writing clear, readable assertions.
+*   **Write Unit Tests:** For any TypeScript code you write, also provide corresponding unit tests.
+*   **Use Modern Testing Libraries:** Utilize Jest for unit testing, including its built-in mocking and assertion capabilities. For VS Code API interactions and integration tests, consider `vscode-test` which often uses Mocha and Chai.
 *   **Follow the AAA Pattern:** Structure every test method using the Arrange, Act, Assert pattern.
-*   **Standard Naming:** The object under test must be named `_sut` (System Under Test) and should be instantiated in the test setup or constructor.
+*   **Standard Naming:** Clearly identify the object under test within your test methods (e.g., `const service = new MyService(...)`).
 
 ### 4. General Best Practices:
 
-*   **Code Style:** Use `var` for local variable declarations where the type is obvious to improve readability.
+*   **Code Style:** Prefer `const` for variable declarations by default. Use `let` only when a variable needs to be reassigned. Avoid `var` to prevent issues with variable hoisting and to ensure block-scoped variables.
 *   **Comments:** Write self-documenting code. Avoid comments that explain what the code is doing. Only add comments to explain *why* a complex or non-obvious decision was made.
 *   **Source Control:** At the end of your response, include a list of file patterns (like `CoverageReport`) that should be added to a `.gitignore` file.
 
