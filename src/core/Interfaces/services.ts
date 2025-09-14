@@ -1,6 +1,6 @@
 
 import { Uri } from "vscode";
-import { ITestResult, IExecutablePaths, ITestRunResult, IJsonTestResult } from "./datastructures";
+import { ITestResult, IExecutablePaths, ITestRunResult, IJsonTestResult, ITestPaths } from "./datastructures";
 
 /**
  * Manages the creation and verification of test files (generator, checker).
@@ -33,7 +33,7 @@ export interface ICompilationService {
   compile(
     solutionPath: string,
     generatorValidatorPath: string,
-    checkerPath: string
+    checkerPath: string,
   ): Promise<IExecutablePaths | undefined>;
 }
 
@@ -62,13 +62,13 @@ export interface IResultService {
   /**
    * Initializes the result storage for a new test run.
    */
-  initialize(): void;
+  initialize(solutionPath : string): ITestPaths;
 
   /**
    * Saves the result of a single test case.
    * @param result The test result to save.
    */
-  saveResult(result: IJsonTestResult): void;
+  saveResult(result: IJsonTestResult, paths: ITestPaths): void
 }
 
 /**

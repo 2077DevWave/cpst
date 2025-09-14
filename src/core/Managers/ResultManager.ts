@@ -1,35 +1,17 @@
 import * as path from 'path';
-import { IFileManager, IResultManager } from '../Interfaces/classes';
-import { IJsonTestResult } from '../Interfaces/datastructures';
+import { IFileManager, IResultManager, ICPSTFolderManager } from '../Interfaces/classes';
+import { IJsonTestResult, ITestPaths } from '../Interfaces/datastructures';
 
 export class ResultManager implements IResultManager {
     constructor(
-        private readonly _fileManager: IFileManager,
-        private readonly _runFolderPath: string,
-        private readonly _mainJsonPath: string,
-        private readonly _solutionName: string,
-        private readonly _runFolderName: string
+        private readonly _cpstFolderManager: ICPSTFolderManager,
     ) {}
 
-    public initialize(): void {
-        let mainJson: { [key: string]: string[] } = {};
-        if (this._fileManager.exists(this._mainJsonPath)) {
-            try {
-                mainJson = JSON.parse(this._fileManager.readFile(this._mainJsonPath));
-            } catch (e) {
-                mainJson = {};
-            }
-        }
-
-        if (!mainJson[this._solutionName]) {
-            mainJson[this._solutionName] = [];
-        }
-        mainJson[this._solutionName].push(this._runFolderName);
-        this._fileManager.writeFile(this._mainJsonPath, JSON.stringify(mainJson, null, 4));
+    public initialize(paths: ITestPaths): void {
+        this._cpstFolderManager.initializeTestRun(path.basename(paths.solutionDir), path.basename(paths.runFolderPath), paths.mainJsonPath);
     }
 
-    public save(result: IJsonTestResult): void {
-        const resultFilePath = path.join(this._runFolderPath, `test_${result.testCase}.json`);
-        this._fileManager.writeFile(resultFilePath, JSON.stringify(result, null, 4));
+    public save(result: IJsonTestResult, paths : ITestPaths): void {
+        this._cpstFolderManager.saveResult(paths.runFolderPath, result);
     }
 }

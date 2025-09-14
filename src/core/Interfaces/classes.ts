@@ -151,12 +151,12 @@ export interface IResultManager {
     /**
      * Initializes the result storage for a new test run.
      */
-    initialize(): void;
+    initialize(paths: ITestPaths): void;
     /**
      * Saves the result of a single test case.
      * @param result The test result to save.
      */
-    save(result: IJsonTestResult): void;
+    save(result: IJsonTestResult, paths: ITestPaths): void;
 }
 
 /**
@@ -224,10 +224,4 @@ export interface ICPSTFolderManager {
      * @returns The absolute path to the temporary directory.
      */
     getTempDir(): string;
-    /**
-     * Gets all relevant paths for a test run, including temporary and results directories.
-     * @param solutionPath The path to the solution file.
-     * @returns An object containing all relevant paths.
-     */
-    getPaths(solutionPath: string): ITestPaths;
 }

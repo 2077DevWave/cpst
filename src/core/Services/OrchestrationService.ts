@@ -1,5 +1,6 @@
 
 import { ITestReporter, ICPSTFolderManager } from '../Interfaces/classes';
+import { ITestPaths } from '../Interfaces/datastructures';
 import { ICompilationService, IOrchestrationService, IResultService, ITestRunnerService } from '../Interfaces/services';
 
 export class OrchestrationService implements IOrchestrationService {
@@ -12,6 +13,7 @@ export class OrchestrationService implements IOrchestrationService {
     ) {}
 
     public async run(solutionPath: string, generatorValidatorPath: string, checkerPath: string): Promise<void> {
+        const paths : ITestPaths = this._resultService.initialize(solutionPath);
         const executables = await this._compilationService.compile(solutionPath, generatorValidatorPath, checkerPath);
 
         if (!executables) {
@@ -19,9 +21,6 @@ export class OrchestrationService implements IOrchestrationService {
             this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDir()]);
             return;
         }
-
-        (this._resultService as any).setSolutionPath(solutionPath); // A bit of a hack, we can improve this with a factory
-        this._resultService.initialize();
 
         const numTests = 100;
         for (let i = 1; i <= numTests; i++) {
@@ -39,7 +38,7 @@ export class OrchestrationService implements IOrchestrationService {
                 message: result.message
             };
 
-            this._resultService.saveResult(resultToSave);
+            this._resultService.saveResult(resultToSave, paths);
             
             const progress = {
                 command: 'testResult',
