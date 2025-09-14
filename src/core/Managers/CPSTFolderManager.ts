@@ -92,7 +92,7 @@ export class CPSTFolderManager implements ICPSTFolderManager {
                 const content = this._fileManager.readFile(filePath);
                 results.push(JSON.parse(content));
             } catch (e) {
-                // Ignore files that can't be parsed
+                console.error(`Failed to parse test result file: ${filePath}`, e);
             }
         }
         return results;
