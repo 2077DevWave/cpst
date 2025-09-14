@@ -5,11 +5,10 @@ import { ITestRunResult } from '../Interfaces/datastructures';
 export class TestRunner implements ITestRunner{
     constructor(
         private readonly _executor: IExecutor,
-        private readonly _fileManager: IFileManager,
-        private readonly _tempDir: string
+        private readonly _fileManager: IFileManager
     ) {}
 
-    public async run(solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult> {
+    public async run(tempDir: string, solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult> {
         const { stdout: testCase, stderr: genError } = await this._executor.runWithLimits(generatorExec, '');
         if (genError) {
             return { status: 'Error', message: `Generator error: ${genError}` };
@@ -25,8 +24,8 @@ export class TestRunner implements ITestRunner{
             return { status: 'RUNTIME_ERROR', message: `Solution runtime error: ${solError}`, input: testCase, duration, memory };
         }
         
-        const inputFile = path.join(this._tempDir, 'input.txt');
-        const outputFile = path.join(this._tempDir, 'output.txt');
+        const inputFile = path.join(tempDir, 'input.txt');
+        const outputFile = path.join(tempDir, 'output.txt');
         this._fileManager.writeFile(inputFile, testCase);
         this._fileManager.writeFile(outputFile, userOutput);
 

@@ -141,7 +141,7 @@ export interface ICompilationManager {
      * @param checkerPath The file path to the checker.
      * @returns A promise that resolves with the paths to the executables, or null if compilation fails.
      */
-    compile(solutionPath: string, generatorValidatorPath: string, checkerPath: string): Promise<IExecutablePaths | null>;
+    compile(tempDir: string, solutionPath: string, generatorValidatorPath: string, checkerPath: string): Promise<IExecutablePaths | null>;
 }
 
 /**
@@ -170,7 +170,7 @@ export interface ITestRunner {
      * @param checkerExec The path to the checker executable.
      * @returns A promise that resolves with the test run result.
      */
-    run(solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult>;
+    run(tempDir: string, solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult>;
 }
 
 /**

@@ -14,6 +14,7 @@ import { ResultService } from './core/Services/ResultService';
 import { OrchestrationService } from './core/Services/OrchestrationService';
 import { UIService } from './core/Services/UIService';
 import { TestReporterProxy } from './core/TestReporterProxy';
+import { TestRunner } from './core/CompileAndRun/TestRunner';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -36,14 +37,14 @@ export function activate(context: vscode.ExtensionContext) {
     const cpstFolderManager = new CPSTFolderManager(fileManager, baseDir);
     const executor = new Executor();
     const testReporterProxy = new TestReporterProxy();
-
+    const testRunner = new TestRunner(executor, fileManager);
     const compiler = new Compiler(testReporterProxy);
-    const compilationManager = new CompilationManager(compiler, cpstFolderManager.getTempDir());
+    const compilationManager = new CompilationManager(compiler);
 
     // Core Services
     const testFileService = new TestFileService(fileManager, context.extensionUri);
-    const compilationService = new CompilationService(compiler, cpstFolderManager, compilationManager);
-    const testRunnerService = new TestRunnerService(executor, fileManager, cpstFolderManager);
+    const compilationService = new CompilationService(compilationManager, cpstFolderManager);
+    const testRunnerService = new TestRunnerService(cpstFolderManager, testRunner);
     const resultService = new ResultService(cpstFolderManager);
     
     const orchestrationService = new OrchestrationService(
