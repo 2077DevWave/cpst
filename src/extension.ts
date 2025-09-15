@@ -8,7 +8,7 @@ import { FileManager } from './core/Managers/FileManager';
 import { CPSTFolderManager } from './core/Managers/CPSTFolderManager';
 import { TestFileService } from './core/Services/TestFileService';
 import { CompilationService } from './core/Services/CompilationService';
-import { CompilationManager } from './core/CompileAndRun/CompilationManager';
+import { CompilationManager } from './core/Managers/CompilationManager';
 import { TestRunnerService } from './core/Services/TestRunnerService';
 import { ResultService } from './core/Services/ResultService';
 import { OrchestrationService } from './core/Services/OrchestrationService';
