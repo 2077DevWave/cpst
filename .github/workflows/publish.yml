@@ -1,4 +1,3 @@
-
 name: Publish to VS Code Marketplace
 
 on:
@@ -23,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js
@@ -31,12 +31,23 @@ jobs:
           node-version: '20.x'
       - run: npm install
       - name: Install vsce
-        run: npm install -g vsce
+        run: npm install -g @vscode/vsce
       - name: Configure Git
         run: |
           git config --global user.name "2077devwave"
           git config --global user.email "2077devwave@gmail.com"
-      - name: Publish and push version
-        run: |
-          vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
-          git push --follow-tags
+      - name: Publish and update version
+        run: vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update version in package.json and package-lock.json"
+          title: "Update version after marketplace release"
+          body: "This PR updates the `package.json` and `package-lock.json` files with the new version after publishing to the VS Code Marketplace."
+          branch: "chore/update-version-${{ github.run_id }}"
+          base: "master"
+          delete-branch: true
+          files: |
+            package.json
+            package-lock.json
