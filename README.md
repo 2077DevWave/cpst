@@ -1,5 +1,6 @@
 [![CI](https://github.com/2077DevWave/cpst/actions/workflows/ci.yml/badge.svg)](https://github.com/2077DevWave/cpst/actions/workflows/ci.yml)
 [![Publish to VS Code Marketplace](https://github.com/2077DevWave/cpst/actions/workflows/publish.yml/badge.svg?branch=master)](https://github.com/2077DevWave/cpst/actions/workflows/publish.yml)
+[![Unit Testing](https://github.com/2077DevWave/cpst/actions/workflows/unit_test.yaml/badge.svg)](https://github.com/2077DevWave/cpst/actions/workflows/unit_test.yaml)
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/2077devwave.cpst?style=flat&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=2077devwave.cpst)
 [![Latest Release](https://img.shields.io/github/v/tag/2077devwave/cpst)](https://github.com/2077DevWave/cpst/tags)
 [![Contributors](https://img.shields.io/github/contributors/2077devwave/cpst)](https://github.com/2077devwave/cpst/graphs/contributors)
@@ -7,7 +8,8 @@
 [![License](https://img.shields.io/github/license/2077devwave/cpst)](https://github.com/2077devwave/cpst/blob/main/LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/2077devwave/cpst)](https://github.com/2077devwave/cpst/commits/main)
 [![CodeFactor](https://www.codefactor.io/repository/github/2077devwave/cpst/badge)](https://www.codefactor.io/repository/github/2077devwave/cpst)
-
+[![codecov](https://codecov.io/github/2077DevWave/cpst/graph/badge.svg?token=LW35MPFY1H)](https://codecov.io/github/2077DevWave/cpst)
+ 
 # C++ Stress Tester (CPST)
 
 Tired of manually setting up test files and compilation commands for your C++ competitive programming solutions? **C++ Stress Tester** streamlines your entire workflow, letting you focus on what matters: solving the problem.
