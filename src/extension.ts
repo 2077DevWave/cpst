@@ -15,6 +15,7 @@ import { OrchestrationService } from './core/Services/OrchestrationService';
 import { UIService } from './core/Services/UIService';
 import { TestReporterProxy } from './core/TestReporterProxy';
 import { TestRunner } from './core/CompileAndRun/TestRunner';
+import { CommandExecutor } from './core/CompileAndRun/CommandExecutor';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -38,7 +39,8 @@ export function activate(context: vscode.ExtensionContext) {
     const executor = new Executor();
     const testReporterProxy = new TestReporterProxy();
     const testRunner = new TestRunner(executor, fileManager);
-    const compiler = new Compiler(testReporterProxy);
+    const commandExecutor = new CommandExecutor();
+    const compiler = new Compiler(testReporterProxy, commandExecutor);
     const compilationManager = new CompilationManager(compiler);
 
     // Core Services
