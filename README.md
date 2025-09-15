@@ -8,6 +8,7 @@
 [![License](https://img.shields.io/github/license/2077devwave/cpst)](https://github.com/2077devwave/cpst/blob/main/LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/2077devwave/cpst)](https://github.com/2077devwave/cpst/commits/main)
 [![CodeFactor](https://www.codefactor.io/repository/github/2077devwave/cpst/badge)](https://www.codefactor.io/repository/github/2077devwave/cpst)
+[![codecov](https://codecov.io/github/2077DevWave/cpst/graph/badge.svg?token=LW35MPFY1H)](https://codecov.io/github/2077DevWave/cpst)
 
 # C++ Stress Tester (CPST)
 
