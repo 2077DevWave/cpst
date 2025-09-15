@@ -42,12 +42,11 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update version in package.json and package-lock.json"
+          commit-message: "chore: update version after release"
           title: "Update version after marketplace release"
-          body: "This PR updates the `package.json` and `package-lock.json` files with the new version after publishing to the VS Code Marketplace."
+          body: |
+            This PR is auto-generated after a release.
+            It updates the `package.json` and `package-lock.json` files with the new version.
           branch: "chore/update-version-${{ github.run_id }}"
           base: "master"
           delete-branch: true
-          files: |
-            package.json
-            package-lock.json
