@@ -6,7 +6,7 @@
 [![Pull Requests](https://img.shields.io/github/issues-pr/2077devwave/cpst)](https://github.com/2077devwave/cpst/pulls)
 [![License](https://img.shields.io/github/license/2077devwave/cpst)](https://github.com/2077devwave/cpst/blob/main/LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/2077devwave/cpst)](https://github.com/2077devwave/cpst/commits/main)
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/2077DevWave/cpst?utm_source=oss&utm_medium=github&utm_campaign=2077DevWave%2Fcpst&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+[![CodeFactor](https://www.codefactor.io/repository/github/2077devwave/cpst/badge)](https://www.codefactor.io/repository/github/2077devwave/cpst)
 
 # C++ Stress Tester (CPST)
 
