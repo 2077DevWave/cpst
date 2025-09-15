@@ -9,7 +9,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/2077devwave/cpst)](https://github.com/2077devwave/cpst/commits/main)
 [![CodeFactor](https://www.codefactor.io/repository/github/2077devwave/cpst/badge)](https://www.codefactor.io/repository/github/2077devwave/cpst)
 [![codecov](https://codecov.io/github/2077DevWave/cpst/graph/badge.svg?token=LW35MPFY1H)](https://codecov.io/github/2077DevWave/cpst)
-
+ 
 # C++ Stress Tester (CPST)
 
 Tired of manually setting up test files and compilation commands for your C++ competitive programming solutions? **C++ Stress Tester** streamlines your entire workflow, letting you focus on what matters: solving the problem.
