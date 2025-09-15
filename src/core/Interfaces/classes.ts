@@ -210,3 +210,15 @@ export interface ICPSTFolderManager {
      */
     getTempDir(): string;
 }
+
+/**
+ * Defines the contract for a command executor.
+ */
+export interface ICommandExecutor {
+    /**
+     * Executes a command.
+     * @param command The command to execute.
+     * @returns A promise that resolves with the stdout and stderr of the command.
+     */
+    execute(command: string): Promise<{ stdout: string; stderr: string }>;
+}

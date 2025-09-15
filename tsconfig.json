@@ -1,5 +1,10 @@
 {
 	"compilerOptions": {
+		"isolatedModules": true,
+		"types": [
+			"jest",
+			"node"
+		],
 		"module": "Node16",
 		"target": "ES2022",
 		"outDir": "out",
