@@ -53,6 +53,19 @@ export interface ITestRunnerService {
     generatorExec: string,
     checkerExec: string
   ): Promise<ITestRunResult>;
+
+  /**
+   * Runs a single test case with a given input.
+   * @param solutionExec The path to the solution executable.
+   * @param checkerExec The path to the checker executable.
+   * @param input The input for the test case.
+   * @returns A promise that resolves with the test result.
+   */
+  runSingleTestWithInput(
+    solutionExec: string,
+    checkerExec: string,
+    input: string
+  ): Promise<ITestRunResult>;
 }
 
 /**

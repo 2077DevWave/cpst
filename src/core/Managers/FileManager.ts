@@ -23,6 +23,18 @@ export class FileManager implements IFileManager {
         return fs.existsSync(filePath);
     }
 
+    public deleteFile(filePath: string): void {
+        if (fs.existsSync(filePath)) {
+            fs.rmSync(filePath, { force: true });
+        }
+    }
+
+    public deleteDirectory(dirPath: string): void {
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+    }
+
     public cleanup(dirs: string[]): void {
         dirs.forEach(dir => {
             if (fs.existsSync(dir)) {

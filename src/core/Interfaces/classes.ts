@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { IExecutablePaths, IJsonTestResult, IRawExecutionResult, ITestPaths, ITestRunResult } from './datastructures';
+import { IExecutablePaths, IJsonTestResult, IRawExecutionResult, ITestPaths, ITestRunResult, ITempDirPath, ISolutionPath, IResultDirPath, IRunDirPath, ISolutionName, IRunId, IMainJson, IMainJsonPath, ITestCaseJsonPath } from './datastructures';
 
 /**
  * @deprecated This interface is obsolete and will be removed. Use IOrchestrationService instead.
@@ -76,6 +76,16 @@ export interface IFileManager {
      * @returns True if the path exists, false otherwise.
      */
     exists(path: string): boolean;
+    /**
+     * Deletes a file.
+     * @param path The path of the file to delete.
+     */
+    deleteFile(path: string): void;
+    /**
+     * Deletes a directory recursively.
+     * @param path The path of the directory to delete.
+     */
+    deleteDirectory(path: string): void;
     /**
      * Deletes a list of files or directories.
      * @param files The paths to clean up.
@@ -164,6 +174,16 @@ export interface ITestRunner {
      * @returns A promise that resolves with the test run result.
      */
     run(tempDir: string, solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult>;
+
+    /**
+     * Runs a single test case with a given input.
+     * @param tempDir The temporary directory for the test run.
+     * @param solutionExec The path to the solution executable.
+     * @param checkerExec The path to the checker executable.
+     * @param input The input for the test case.
+     * @returns A promise that resolves with the test run result.
+     */
+    runWithInput(tempDir: string, solutionExec: string, checkerExec: string, input: string): Promise<ITestRunResult>;
 }
 
 /**
@@ -171,52 +191,173 @@ export interface ITestRunner {
  */
 export interface ICPSTFolderManager {
     /**
-     * Sets up the necessary directories for a test run.
-     * @param solutionPath The path to the solution file.
-     * @returns An object containing the paths to the created directories.
+     * Extracts the solution name from its path.
+     * @param solutionPath The full path to the solution file.
+     * @returns The base name of the solution file.
      */
-    setup(solutionPath: string): ITestPaths;
+    getSolutionName(solutionPath: ISolutionPath): ISolutionName;
+
     /**
-     * Initializes the main JSON file for a new test run.
-     * @param solutionName The name of the solution file.
-     * @param runFolderName The name of the folder for the current run.
-     * @param mainJsonPath The path to the main JSON file.
+     * Extracts the run ID from its path.
+     * @param runFolderPath The full path to the run folder.
+     * @returns The base name of the run folder (timestamp).
      */
-    initializeTestRun(solutionName: string, runFolderName: string, mainJsonPath: string): void;
+    getRunId(runFolderPath: IRunDirPath): IRunId;
+
+    /**
+     * Gets the path to the temporary directory.
+     * @returns The absolute path to the temporary directory.
+     */
+    getTempDirPath(): ITempDirPath;
+
+    /**
+     * Gets the path to the results directory.
+     * @returns The absolute path to the results directory.
+     */
+    getResultDirPath(): IResultDirPath;
+
+    /**
+     * Gets the path to the main JSON file that tracks all solutions and runs.
+     * @returns The absolute path to main.json.
+     */
+    getMainJsonPath(): IMainJsonPath;
+
+    /**
+     * Gets the path to a specific run's result directory.
+     * @param solutionName The name of the solution.
+     * @param runId The ID of the run.
+     * @returns The absolute path to the run's result directory.
+     */
+    getRunResultDirPath(runId: IRunId): IRunDirPath;
+
+    /**
+     * Gets the path for a specific test case's JSON result file.
+     * @param solutionName The name of the solution.
+     * @param runId The ID of the run.
+     * @param testCaseNo The test case number.
+     * @returns The absolute path to the test case's result file.
+     */
+    getTestCaseResultPath(runId: IRunId, testCaseNo: number): ITestCaseJsonPath;
+
+    getTestPaths(solutionPath: ISolutionPath, runId: IRunId): ITestPaths;
+
+    /**
+     * Generates a unique nonce string based on the current timestamp.
+     * @returns A unique string identifier.
+     */
+    generateNonce(): string;
+
+    /**
+     * Creates the temporary directory if it doesn't exist.
+     * @returns The path to the temporary directory.
+     */
+    createTempDir(): void;
+
+    /**
+     * Creates the results directory if it doesn't exist.
+     * @returns The path to the results directory.
+     */
+    createResultDir(): void;
+
+    /**
+     * Creates a directory for a specific test run.
+     * @param solutionPath The path of the solution file.
+     * @param runId The ID of the run.
+     * @returns The path to the created run directory.
+     */
+    createRunFolder(runId: IRunId): void;
+
+    /**
+     * Adds a solution to the main JSON file.
+     * @param solutionName The name of the solution to add.
+     */
+    addSolutionToMainJson(solutionName: ISolutionName): void;
+
+    /**
+     * Adds a run to a solution in the main JSON file.
+     * @param solutionName The name of the solution.
+     * @param runId The ID of the run to add.
+     */
+    addRunToMainJson(solutionName: ISolutionName, runId: IRunId): void;
+
+    /**
+     * Adds a new solution, creating its folder and updating the main JSON file.
+     * @param solutionPath The path of the solution file.
+     */
+    addSolution(solutionPath : ISolutionPath): void;
+
+    /**
+     * Adds a new run for a solution, creating its folder and updating the main JSON file.
+     * @param solutionName The name of the solution.
+     * @param runId The ID of the run.
+     */
+    addRun(solutionName: ISolutionName, runId: IRunId): void;
+
+    /**
+     * Reads and parses the main JSON file.
+     * @returns The parsed main JSON object.
+     */
+    readMainJson(): IMainJson;
+
+    /**
+     * Initializes a new test run by adding it to the tracking system.
+     * @param solutionName The name of the solution.
+     * @param runId The ID of the run.
+     */
+    initializeTestRun(solutionName: ISolutionName, runId: IRunId): void;
+
     /**
      * Saves a test result to a JSON file.
      * @param runFolderPath The path to the folder for the current run.
      * @param result The result to save.
      */
-    saveResult(runFolderPath: string, result: IJsonTestResult): void;
+    saveResult(runFolderPath: IRunDirPath, result: IJsonTestResult): void;
+
     /**
      * Gets a list of all solutions that have been tested.
      * @returns An array of solution names.
      */
-    getSolutions(): string[];
+    getallSolutions(): ISolutionName[];
+
     /**
      * Gets a list of all test runs for a given solution.
      * @param solutionName The name of the solution.
      * @returns An array of run folder names (timestamps).
      */
-    getRuns(solutionName: string): string[];
+    getallRuns(solutionName: ISolutionName): IRunId[];
+
     /**
      * Retrieves all test results for a specific test run.
      * @param solutionName The name of the solution.
      * @param runId The ID of the test run (timestamp).
      * @returns An array of test results.
      */
-    getTestResults(solutionName: string, runId: string): IJsonTestResult[];
+    getallTestResults(runId: IRunId): IJsonTestResult[];
+
+    /**
+     * Deletes a solution and all its associated runs.
+     * @param solutionName The name of the solution to delete.
+     */
+    deleteSolution(solutionName: ISolutionName): void;
+
+    /**
+     * Deletes a specific test run.
+     * @param runId The ID of the run to delete.
+     */
+    deleteRun(runId: IRunId): void;
+
+    /**
+     * Deletes a specific test case result.
+     * @param runId The ID of the run containing the test case.
+     * @param testCaseNo The number of the test case to delete.
+     */
+    deleteTestResult(runId: IRunId, testCaseNo: number): void;
+
     /**
      * Cleans up temporary files and directories.
      * @param paths An array of paths to delete.
      */
     cleanup(paths: string[]): void;
-    /**
-     * Gets the path to the temporary directory.
-     * @returns The absolute path to the temporary directory.
-     */
-    getTempDir(): string;
 }
 
 /**

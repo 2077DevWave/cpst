@@ -1,22 +1,41 @@
 import { ITestRunnerService } from '../../core/Interfaces/services';
 import { ITestRunResult } from '../../core/Interfaces/datastructures';
 import { ICPSTFolderManager, ITestRunner } from '../../core/Interfaces/classes';
-import { TestRunnerService } from '../../core/Services/TestRunnerService'; // Adjust the import path accordingly
+import { TestRunnerService } from '../../core/Services/TestRunnerService';
 
 // Mock the dependencies (interfaces) by creating mock objects
 const mockCpstFolderManager: jest.Mocked<ICPSTFolderManager> = {
-  setup: jest.fn(),
+  getTempDirPath: jest.fn(),
+  getSolutionName: jest.fn(),
+  getRunId: jest.fn(),
+  getResultDirPath: jest.fn(),
+  getMainJsonPath: jest.fn(),
+  getRunResultDirPath: jest.fn(),
+  getTestCaseResultPath: jest.fn(),
+  getTestPaths: jest.fn(),
+  generateNonce: jest.fn(),
+  createTempDir: jest.fn(),
+  createResultDir: jest.fn(),
+  createRunFolder: jest.fn(),
+  addSolutionToMainJson: jest.fn(),
+  addRunToMainJson: jest.fn(),
+  addSolution: jest.fn(),
+  addRun: jest.fn(),
+  readMainJson: jest.fn(),
   initializeTestRun: jest.fn(),
   saveResult: jest.fn(),
-  getSolutions: jest.fn(),
-  getRuns: jest.fn(),
-  getTestResults: jest.fn(),
-  getTempDir: jest.fn(),
+  getallSolutions: jest.fn(),
+  getallRuns: jest.fn(),
+  getallTestResults: jest.fn(),
+  deleteRun: jest.fn(),
+  deleteSolution: jest.fn(),
+  deleteTestResult: jest.fn(),
   cleanup: jest.fn(),
 };
 
 const mockTestRunner: jest.Mocked<ITestRunner> = {
   run: jest.fn(),
+  runWithInput: jest.fn()
 };
 
 describe('TestRunnerService', () => {
@@ -44,14 +63,14 @@ describe('TestRunnerService', () => {
         output: 'test output',
       };
 
-      mockCpstFolderManager.getTempDir.mockReturnValue(tempDir);
+      mockCpstFolderManager.getTempDirPath.mockReturnValue(tempDir as any); // Using `as any` because of branded types
       mockTestRunner.run.mockResolvedValue(expectedTestResult);
 
       // Act
       const result = await testRunnerService.runSingleTest(solutionExec, generatorExec, checkerExec);
 
       // Assert
-      expect(mockCpstFolderManager.getTempDir).toHaveBeenCalledTimes(1);
+      expect(mockCpstFolderManager.getTempDirPath).toHaveBeenCalledTimes(1);
       expect(mockTestRunner.run).toHaveBeenCalledTimes(1);
       expect(mockTestRunner.run).toHaveBeenCalledWith(tempDir, solutionExec, generatorExec, checkerExec);
       expect(result).toEqual(expectedTestResult);
@@ -71,14 +90,14 @@ describe('TestRunnerService', () => {
           input: 'large input',
         };
   
-        mockCpstFolderManager.getTempDir.mockReturnValue(tempDir);
+        mockCpstFolderManager.getTempDirPath.mockReturnValue(tempDir as any);
         mockTestRunner.run.mockResolvedValue(expectedFailureResult);
   
         // Act
         const result = await testRunnerService.runSingleTest(solutionExec, generatorExec, checkerExec);
   
         // Assert
-        expect(mockCpstFolderManager.getTempDir).toHaveBeenCalledTimes(1);
+        expect(mockCpstFolderManager.getTempDirPath).toHaveBeenCalledTimes(1);
         expect(mockTestRunner.run).toHaveBeenCalledWith(tempDir, solutionExec, generatorExec, checkerExec);
         expect(result).toEqual(expectedFailureResult);
     });
@@ -91,14 +110,14 @@ describe('TestRunnerService', () => {
         const checkerExec = './check.out';
         const expectedError = new Error('Test runner crashed');
   
-        mockCpstFolderManager.getTempDir.mockReturnValue(tempDir);
+        mockCpstFolderManager.getTempDirPath.mockReturnValue(tempDir as any);
         mockTestRunner.run.mockRejectedValue(expectedError);
   
         // Act & Assert
         await expect(testRunnerService.runSingleTest(solutionExec, generatorExec, checkerExec))
             .rejects.toThrow('Test runner crashed');
         
-        expect(mockCpstFolderManager.getTempDir).toHaveBeenCalledTimes(1);
+        expect(mockCpstFolderManager.getTempDirPath).toHaveBeenCalledTimes(1);
         expect(mockTestRunner.run).toHaveBeenCalledWith(tempDir, solutionExec, generatorExec, checkerExec);
       });
   });

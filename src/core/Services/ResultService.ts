@@ -1,6 +1,6 @@
 
 import { IResultService } from '../Interfaces/services';
-import { IJsonTestResult, ITestPaths } from '../Interfaces/datastructures';
+import { IJsonTestResult, IRunId, ISolutionPath, ITestPaths } from '../Interfaces/datastructures';
 import { ICPSTFolderManager} from '../Interfaces/classes';
 import * as path from 'path';
 
@@ -10,9 +10,9 @@ export class ResultService implements IResultService {
     ) {}
 
     public initialize(solutionPath : string): ITestPaths {
-        const paths = this._cpstFolderManager.setup(solutionPath);
-        this._cpstFolderManager.initializeTestRun(path.basename(paths.solutionDir), path.basename(paths.runFolderPath), paths.mainJsonPath);
-        return paths;
+        const runId: IRunId = this._cpstFolderManager.generateNonce() as IRunId;
+        this._cpstFolderManager.addRun(this._cpstFolderManager.getSolutionName(solutionPath as ISolutionPath) ,runId);
+        return this._cpstFolderManager.getTestPaths(solutionPath as ISolutionPath, runId);
     }
 
     public saveResult(result: IJsonTestResult, paths: ITestPaths): void {

@@ -18,7 +18,7 @@ export class OrchestrationService implements IOrchestrationService {
 
         if (!executables) {
             this._reporter.reportError("Compilation failed.");
-            this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDir()]);
+            this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDirPath()]);
             return;
         }
 
@@ -54,6 +54,6 @@ export class OrchestrationService implements IOrchestrationService {
             this._reporter.reportProgress(progress);
         }
         
-        this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDir()]);
+        this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDirPath()]);
     }
 }

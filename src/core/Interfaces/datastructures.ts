@@ -63,15 +63,15 @@ export interface ITestRunResult {
  */
 export interface ITestPaths {
     /** The temporary directory for compilation and execution. */
-    tempDir: string;
+    tempDir: ITempDirPath;
     /** The root directory where all results are stored. */
-    resultsDir: string;
+    resultsDir: IResultDirPath;
     /** The directory specific to the solution being tested. */
-    solutionDir: string;
+    solutionPath: ISolutionPath;
     /** The directory for a specific test run, identified by a timestamp. */
-    runFolderPath: string;
+    runFolderPath: IRunDirPath;
     /** The path to the main JSON file that tracks all test runs. */
-    mainJsonPath: string;
+    mainJsonPath: IMainJsonPath;
 }
 
 /**
@@ -139,3 +139,21 @@ export interface IJsonTestResult {
     /** The reason for the result, provided by the checker. */
     reason?: string;
 }
+
+// A generic helper type to create a branded type
+// K is the base type (e.g., string)
+// T is the unique brand name (e.g., "SolutionPath")
+export type Brand<K, T> = K & { __brand: T };
+
+// Define unique path types using the Brand helper
+export type ISolutionPath = Brand<string, 'ISolutionDirPath'>;
+export type IRunDirPath = Brand<string, 'IRunDirPath'>;
+export type IResultDirPath = Brand<string, 'IResultDirPath'>;
+export type ITestCaseJsonPath = Brand<string, 'ITestCaseJsonPath'>;
+export type IMainJsonPath = Brand<string, 'IMainJsonPath'>;
+export type ITempDirPath = Brand<string, 'ITempDirPath'>;
+
+export type ISolutionName = Brand<string, 'ISolutionName'>;
+export type IRunId = Brand<string, 'IRunId'>;
+
+export type IMainJson = { [key: ISolutionName]: IRunId[] };
