@@ -1,4 +1,4 @@
-import { exec, ChildProcess } from 'child_process';
+import { exec, execFile, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { Executor } from '../../core/CompileAndRun/Executor';
 
@@ -17,6 +17,7 @@ describe('Executor', () => {
     let executor: Executor;
     let mockChildProcess: MockChildProcess;
     const mockedExec = exec as unknown as jest.Mock;
+    const mockedExecFile = execFile as unknown as jest.Mock;
     const mockHrtime = jest.spyOn(process, 'hrtime');
 
     beforeEach(() => {
@@ -76,9 +77,8 @@ describe('Executor', () => {
             const args = ['-la'];
             const stdout = 'total 0';
             const stderr = '';
-            mockedExec.mockImplementation((fullCommand, callback) => {
+            mockedExecFile.mockImplementation((_cmd, _args, callback) => {
                 callback(null, stdout, stderr);
-                return new MockChildProcess();
             });
 
             const result = await executor.runRaw(command, args);
@@ -86,7 +86,7 @@ describe('Executor', () => {
             expect(result.stdout).toBe(stdout);
             expect(result.stderr).toBe(stderr);
             expect(result.code).toBe(0);
-            expect(mockedExec).toHaveBeenCalledWith('ls -la', expect.any(Function));
+            expect(mockedExecFile).toHaveBeenCalledWith(command, args, expect.any(Function));
         });
 
         it('should resolve with error data on failed execution', async () => {
@@ -95,9 +95,8 @@ describe('Executor', () => {
             const error = new Error('Command failed') as any;
             error.code = 1;
             const stderr = 'cat: nonexistent.txt: No such file or directory';
-            mockedExec.mockImplementation((fullCommand, callback) => {
+            mockedExecFile.mockImplementation((_cmd, _args, callback) => {
                 callback(error, '', stderr);
-                return new MockChildProcess();
             });
 
             const result = await executor.runRaw(command, args);
@@ -105,6 +104,7 @@ describe('Executor', () => {
             expect(result.stderr).toBe(stderr);
             expect(result.code).toBe(1);
             expect(result.error).toBe(error);
+            expect(mockedExecFile).toHaveBeenCalledWith(command, args, expect.any(Function));
         });
     });
 });
