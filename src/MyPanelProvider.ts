@@ -142,6 +142,7 @@ export class MyPanelProvider
     );
     const htmlPath = vscode.Uri.joinPath(
       this._extensionUri,
+      "out",
       "src",
       "webview.html"
     );

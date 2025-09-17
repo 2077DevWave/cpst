@@ -1,5 +1,5 @@
 
-import { exec, ExecOptions } from 'child_process';
+import { exec, execFile, ExecOptions } from 'child_process';
 import { IExecutor } from '../Interfaces/classes';
 import { IExecutionOptionsConfig, IExecutionResult, IRawExecutionResult } from '../Interfaces/datastructures';
 
@@ -64,9 +64,8 @@ export class Executor implements IExecutor {
 
     public runRaw(command: string, args: string[]): Promise<IRawExecutionResult> {
         const start = process.hrtime();
-        const fullCommand = `${command} ${args.join(' ')}`;
         return new Promise((resolve) => {
-            exec(fullCommand, (error, stdout, stderr) => {
+            execFile(command, args, (error, stdout, stderr) => {
                 const duration = this.calculateDuration(start);
                 const code = error ? (error as any).code : 0;
                 const signal = error ? (error as any).signal : null;

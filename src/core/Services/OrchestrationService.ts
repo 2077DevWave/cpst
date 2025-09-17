@@ -52,10 +52,6 @@ export class OrchestrationService implements IOrchestrationService {
                 reason: result.reason
             };
             this._reporter.reportProgress(progress);
-
-            // if (result.status !== 'OK') {
-            //     break;
-            // }
         }
         
         this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDir()]);
