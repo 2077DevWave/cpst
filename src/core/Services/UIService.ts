@@ -59,7 +59,7 @@ export class UIService implements IUIService {
         }
     }
 
-    public async runStressTest(): Promise<void> {
+    public async runStressTest(numTests: number): Promise<void> {
         if (!this._currentSolutionFile) {
             this._reporter.reportError("Cannot run test: Could not determine the solution file.");
             return;
@@ -80,6 +80,6 @@ export class UIService implements IUIService {
             return;
         }
 
-        await this._orchestrationService.run(solutionPath, genValPath, checkerPath);
+        await this._orchestrationService.run(solutionPath, genValPath, checkerPath, numTests);
     }
 }

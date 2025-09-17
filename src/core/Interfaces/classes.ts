@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { IExecutablePaths, IJsonTestResult, ITestPaths, ITestRunResult } from './datastructures';
+import { IExecutablePaths, IJsonTestResult, IRawExecutionResult, ITestPaths, ITestRunResult } from './datastructures';
 
 /**
  * @deprecated This interface is obsolete and will be removed. Use IOrchestrationService instead.
@@ -39,6 +39,14 @@ export interface IExecutor {
      * @returns A promise that resolves with the execution result.
      */
     runWithLimits(command: string, input: string): Promise<{ stdout: string, stderr: string, duration: number, memory: number, status: string }>;
+
+    /**
+     * Runs a command without input and returns the raw execution result.
+     * @param command The command to execute.
+     * @param args The arguments to pass to the command.
+     * @returns A promise that resolves with the raw execution result.
+     */
+    runRaw(command: string, args: string[]): Promise<IRawExecutionResult>;
 }
 
 /**

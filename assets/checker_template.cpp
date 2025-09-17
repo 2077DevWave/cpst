@@ -16,6 +16,13 @@ bool checker(const string& input, const string& user_output_str) {
     /*
         TODO: This function must determine if the user's answer is a correct solution to
         the problem, especially for problems with multiple correct answers.
+
+        If the answer is wrong, you can write a reason to stderr.
+        For example:
+        if (user_answer_value != expected_answer_value) {
+            cerr << "Wrong answer: expected " << expected_answer_value << ", but got " << user_answer_value << endl;
+            return false;
+        }
     */
     
     return false;

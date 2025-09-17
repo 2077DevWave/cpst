@@ -14,8 +14,17 @@
             background-color: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
             cursor: pointer; text-align: center;
+            margin-top: 5px;
         }
         button:hover { background-color: var(--vscode-button-hoverBackground); }
+        input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid var(--vscode-input-border);
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -29,6 +38,8 @@
             <button id="generate-button">Create Stress Test Files</button>
         </div>
         <div id="run-view" class="hidden">
+            <label for="num-tests-input">Number of Tests:</label>
+            <input type="number" id="num-tests-input" value="100" min="1">
             <button id="run-button">Run Stress Test</button>
         </div>
     </div>
@@ -44,12 +55,19 @@
         const runView = document.getElementById('run-view');
         const fileInfo = document.getElementById('file-info');
         const resultsView = document.getElementById('results-view');
+        const numTestsInput = document.getElementById('num-tests-input');
 
         document.getElementById('generate-button').addEventListener('click', () => {
             vscode.postMessage({ command: 'generate' });
         });
         document.getElementById('run-button').addEventListener('click', () => {
-            vscode.postMessage({ command: 'run' });
+            const numTests = parseInt(numTestsInput.value, 10);
+            if (isNaN(numTests) || numTests <= 0) {
+                numTestsInput.style.borderColor = 'red';
+                return;
+            }
+            numTestsInput.style.borderColor = 'var(--vscode-input-border)';
+            vscode.postMessage({ command: 'run', numTests: numTests });
         });
 
         window.addEventListener('message', event => {

@@ -96,7 +96,7 @@ export class MyPanelProvider
           await this._uiService.generateTestFiles();
           return;
         case "run":
-          this._uiService.runStressTest();
+          this._uiService.runStressTest(message.numTests);
           return;
       }
     });

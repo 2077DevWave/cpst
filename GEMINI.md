@@ -27,7 +27,7 @@ To build and run this project, you'll need to have Node.js and npm installed.
 
 3.  **Run the tests:**
     ```bash
-    npm run test
+    npm run test:unit
     ```
 
 4.  **Lint the code:**
