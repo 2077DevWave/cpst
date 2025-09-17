@@ -30,6 +30,7 @@ const mockCpstFolderManager: jest.Mocked<ICPSTFolderManager> = {
   deleteRun: jest.fn(),
   deleteSolution: jest.fn(),
   deleteTestResult: jest.fn(),
+  updateTestResult: jest.fn(),
   cleanup: jest.fn(),
 };
 

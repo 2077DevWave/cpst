@@ -182,6 +182,13 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         }
     }
 
+    public updateTestResult(runId: IRunId, newJsonResult: IJsonTestResult): void {
+        const testCasePath = this.getTestCaseResultPath(runId, newJsonResult.testCase);
+        if (this._fileManager.exists(testCasePath)) {
+            this._fileManager.writeFile(testCasePath, JSON.stringify(newJsonResult, null, 4));
+        }
+    }
+
     public cleanup(paths: string[]): void {
         this._fileManager.cleanup(paths);
     }

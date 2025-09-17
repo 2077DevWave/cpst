@@ -354,6 +354,13 @@ export interface ICPSTFolderManager {
     deleteTestResult(runId: IRunId, testCaseNo: number): void;
 
     /**
+     * Updates an existing test result JSON file.
+     * @param runId The ID of the run containing the test case.
+     * @param newJsonResult The new result object to save.
+     */
+    updateTestResult(runId: IRunId, newJsonResult: IJsonTestResult): void;
+
+    /**
      * Cleans up temporary files and directories.
      * @param paths An array of paths to delete.
      */

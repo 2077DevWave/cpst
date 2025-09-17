@@ -389,6 +389,30 @@ describe('CPSTFolderManager', () => {
         });
     });
 
+    describe('updateTestResult', () => {
+        const runId = 'run-id' as IRunId;
+        const newJsonResult: IJsonTestResult = { testCase: 1, lastResult: 'WA' };
+        const testCasePath = `${baseDir}/results/${runId}/test_1.json`;
+
+        it('should update the test result file if it exists', () => {
+            mockFileManager.exists.mockReturnValue(true);
+
+            folderManager.updateTestResult(runId, newJsonResult);
+
+            expect(mockFileManager.exists).toHaveBeenCalledWith(testCasePath);
+            expect(mockFileManager.writeFile).toHaveBeenCalledWith(testCasePath, JSON.stringify(newJsonResult, null, 4));
+        });
+
+        it('should not write the file if the test case does not exist', () => {
+            mockFileManager.exists.mockReturnValue(false);
+
+            folderManager.updateTestResult(runId, newJsonResult);
+
+            expect(mockFileManager.exists).toHaveBeenCalledWith(testCasePath);
+            expect(mockFileManager.writeFile).not.toHaveBeenCalled();
+        });
+    });
+
     describe('cleanup', () => {
         it('should call fileManager.cleanup with the given paths', () => {
             const paths = ['/path1', '/path2'];
