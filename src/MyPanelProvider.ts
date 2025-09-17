@@ -96,7 +96,7 @@ export class MyPanelProvider
           await this._uiService.generateTestFiles();
           return;
         case "run":
-          this._uiService.runStressTest();
+          this._uiService.runStressTest(message.numTests);
           return;
       }
     });
@@ -142,7 +142,7 @@ export class MyPanelProvider
     );
     const htmlPath = vscode.Uri.joinPath(
       this._extensionUri,
-      "out",
+      "src",
       "webview.html"
     );
     let htmlContent = fs.readFileSync(htmlPath.fsPath, "utf8");

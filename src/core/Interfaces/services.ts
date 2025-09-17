@@ -84,7 +84,8 @@ export interface IOrchestrationService {
   run(
     solutionPath: string,
     generatorValidatorPath: string,
-    checkerPath: string
+    checkerPath: string,
+    numTests: number
   ): Promise<void>;
 }
 
@@ -100,7 +101,7 @@ export interface IUIService {
   /**
    * Handles the command to run the stress test.
    */
-  runStressTest(): Promise<void>;
+  runStressTest(numTests: number): Promise<void>;
 
   /**
    * Notifies the UI about the currently active solution file.

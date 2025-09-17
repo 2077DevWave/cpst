@@ -12,7 +12,7 @@ export class OrchestrationService implements IOrchestrationService {
         private readonly _reporter: ITestReporter
     ) {}
 
-    public async run(solutionPath: string, generatorValidatorPath: string, checkerPath: string): Promise<void> {
+    public async run(solutionPath: string, generatorValidatorPath: string, checkerPath: string, numTests: number): Promise<void> {
         const paths : ITestPaths = this._resultService.initialize(solutionPath);
         const executables = await this._compilationService.compile(solutionPath, generatorValidatorPath, checkerPath);
 
@@ -22,7 +22,6 @@ export class OrchestrationService implements IOrchestrationService {
             return;
         }
 
-        const numTests = 100; // TODO: Make this configurable
         for (let i = 1; i <= numTests; i++) {
             this._reporter.reportProgress({ command: 'testResult', status: 'Running', testCase: i });
 
