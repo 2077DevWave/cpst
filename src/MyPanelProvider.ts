@@ -143,7 +143,6 @@ export class MyPanelProvider
     const htmlPath = vscode.Uri.joinPath(
       this._extensionUri,
       "out",
-      "src",
       "webview.html"
     );
     let htmlContent = fs.readFileSync(htmlPath.fsPath, "utf8");
