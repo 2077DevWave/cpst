@@ -61,6 +61,20 @@ export class Executor implements IExecutor {
         });
     }
 
+
+    public runRaw(command: string, args: string[]): Promise<IRawExecutionResult> {
+        const start = process.hrtime();
+        const fullCommand = `${command} ${args.join(' ')}`;
+        return new Promise((resolve) => {
+            exec(fullCommand, (error, stdout, stderr) => {
+                const duration = this.calculateDuration(start);
+                const code = error ? (error as any).code : 0;
+                const signal = error ? (error as any).signal : null;
+                resolve({ stdout, stderr, duration, code, signal, error: error || undefined });
+            });
+        });
+    }
+
     private determineStatus(result: IRawExecutionResult): string {
         if (result.signal === 'SIGTERM') {
             return 'TLE';

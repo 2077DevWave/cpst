@@ -35,7 +35,8 @@ export class OrchestrationService implements IOrchestrationService {
                 userOutput: result.output,
                 execTime: result.duration,
                 memoryUsed: result.memory,
-                message: result.message
+                message: result.message,
+                reason: result.reason
             };
 
             this._resultService.saveResult(resultToSave, paths);
@@ -48,13 +49,14 @@ export class OrchestrationService implements IOrchestrationService {
                 output: result.output,
                 time: result.duration,
                 memory: result.memory,
-                message: result.message
+                message: result.message,
+                reason: result.reason
             };
             this._reporter.reportProgress(progress);
 
-            if (result.status !== 'OK') {
-                break;
-            }
+            // if (result.status !== 'OK') {
+            //     break;
+            // }
         }
         
         this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDir()]);

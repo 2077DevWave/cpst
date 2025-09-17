@@ -54,6 +54,8 @@ export interface ITestRunResult {
     memory?: number;
     /** Any message associated with the test run, e.g., an error message. */
     message?: string;
+    /** The reason for the result, provided by the checker. */
+    reason?: string;
 }
 
 /**
@@ -134,4 +136,6 @@ export interface IJsonTestResult {
     memoryUsed?: number;
     /** Any message associated with the result, e.g., an error message. */
     message?: string;
+    /** The reason for the result, provided by the checker. */
+    reason?: string;
 }
