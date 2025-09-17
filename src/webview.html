@@ -63,9 +63,10 @@
         document.getElementById('run-button').addEventListener('click', () => {
             const numTests = parseInt(numTestsInput.value, 10);
             if (isNaN(numTests) || numTests <= 0) {
-                // You might want to show an error to the user
+                numTestsInput.style.borderColor = 'red';
                 return;
             }
+            numTestsInput.style.borderColor = 'var(--vscode-input-border)';
             vscode.postMessage({ command: 'run', numTests: numTests });
         });
 
