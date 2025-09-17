@@ -67,7 +67,7 @@ export class Executor implements IExecutor {
         return new Promise((resolve) => {
             execFile(command, args, (error, stdout, stderr) => {
                 const duration = this.calculateDuration(start);
-                const code = error ? (error as any).code : 0;
+                const code = error ? (typeof (error as any).code === 'string' ? null : (error as any).code) : 0;
                 const signal = error ? (error as any).signal : null;
                 resolve({ stdout, stderr, duration, code, signal, error: error || undefined });
             });
