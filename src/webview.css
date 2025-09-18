@@ -106,37 +106,48 @@ pre {
 
 #summary-view {
     margin-bottom: 20px;
-    padding: 15px;
+    padding: 10px;
     border: 1px solid var(--vscode-peekView-border);
     border-radius: 4px;
     background-color: var(--vscode-list-inactiveSelectionBackground);
 }
 
-#summary-view h3 {
-    margin-top: 0;
-}
-
 .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
 }
 
 .summary-item {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 10px;
+    gap: 8px;
+    padding: 5px 10px;
     border-radius: 4px;
     background-color: var(--vscode-textBlockQuote-background);
+    cursor: default;
 }
 
-.summary-status {
-    font-weight: bold;
-    font-size: 1.1em;
+.summary-icon {
+    display: flex;
+    align-items: center;
 }
 
 .summary-count {
-    font-size: 1.5em;
-    color: var(--vscode-textLink-foreground);
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.status-success .summary-icon {
+    color: var(--vscode-testing-iconPassed);
+}
+.status-error .summary-icon {
+    color: var(--vscode-testing-iconFailed);
+}
+.status-warning .summary-icon {
+    color: var(--vscode-testing-iconQueued);
+}
+.status-info .summary-icon {
+    color: var(--vscode-testing-iconUnset);
 }
