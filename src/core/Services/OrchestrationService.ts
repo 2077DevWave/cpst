@@ -22,11 +22,15 @@ export class OrchestrationService implements IOrchestrationService {
             return;
         }
 
+        const statusCounts: { [status: string]: number } = {};
+
         for (let i = 1; i <= numTests; i++) {
             this._reporter.reportProgress({ command: 'testResult', status: 'Running', testCase: i });
 
             const result = await this._testRunnerService.runSingleTest(executables.solutionExec, executables.generatorExec, executables.checkerExec);
             
+            statusCounts[result.status] = (statusCounts[result.status] || 0) + 1;
+
             const resultToSave = {
                 testCase: i,
                 lastResult: result.status,
@@ -54,6 +58,11 @@ export class OrchestrationService implements IOrchestrationService {
             this._reporter.reportProgress(progress);
         }
         
+        this._reporter.reportProgress({
+            command: 'summary',
+            results: statusCounts
+        });
+
         this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDirPath()]);
     }
 
@@ -66,11 +75,15 @@ export class OrchestrationService implements IOrchestrationService {
             return;
         }
 
+        const statusCounts: { [status: string]: number } = {};
+
         for(const runId of Object.keys(testCases) as IRunId[]){
             for (const test of testCases[runId]) {
-                this._reporter.reportProgress({ command: 'testResult', status: 'Running', testCase: test.testCase });
+                this._reporter.reportProgress({ command: 'testResult', status: 'Running', testCase: test.testCase, runId: runId });
 
                 const result = await this._testRunnerService.runSingleTestWithInput(executables.solutionExec, executables.checkerExec, test.input || "");
+                
+                statusCounts[result.status] = (statusCounts[result.status] || 0) + 1;
                 
                 const resultToSave : IJsonTestResult = {
                     testCase: test.testCase,
@@ -94,11 +107,17 @@ export class OrchestrationService implements IOrchestrationService {
                     time: result.duration,
                     memory: result.memory,
                     message: result.message,
-                    reason: result.reason
+                    reason: result.reason,
+                    runId: runId
                 };
                 this._reporter.reportProgress(progress);
             }
         }
+        
+        this._reporter.reportProgress({
+            command: 'summary',
+            results: statusCounts
+        });
         
         this._cpstFolderManager.cleanup([this._cpstFolderManager.getTempDirPath()]);
     }

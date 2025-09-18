@@ -155,6 +155,9 @@ export class MyPanelProvider
     const webviewCssUri = webview.asWebviewUri(
         vscode.Uri.joinPath(this._extensionUri, "out", "webview.css")
     );
+    const webviewJsUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "out", "webview.js")
+    );
     const htmlPath = vscode.Uri.joinPath(
       this._extensionUri,
       "out",
@@ -170,6 +173,10 @@ export class MyPanelProvider
     htmlContent = htmlContent.replace(
         "%WEBVIEW_CSS%",
         webviewCssUri.toString()
+    );
+    htmlContent = htmlContent.replace(
+        "%WEBVIEW_JS%",
+        webviewJsUri.toString()
     );
     htmlContent = htmlContent.replace(
       "%DIFF2HTML_JS%",

@@ -103,3 +103,40 @@ pre {
     z-index: 1000;
     font-weight: bold;
 }
+
+#summary-view {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid var(--vscode-peekView-border);
+    border-radius: 4px;
+    background-color: var(--vscode-list-inactiveSelectionBackground);
+}
+
+#summary-view h3 {
+    margin-top: 0;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: var(--vscode-textBlockQuote-background);
+}
+
+.summary-status {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.summary-count {
+    font-size: 1.5em;
+    color: var(--vscode-textLink-foreground);
+}
