@@ -28,6 +28,9 @@
     <div id="results-view"></div>
     <div id="runs-view"></div>
     <div id="test-cases-view"></div>
+    <div id="rerun-container" class="hidden">
+        <button id="rerun-selected-button">Re-run Selected Tests (<span id="rerun-count">0</span>)</button>
+    </div>
 
     <script src="%DIFF2HTML_JS%"></script>
     <script nonce="%NONCE%">
@@ -41,10 +44,36 @@
         const numTestsInput = document.getElementById('num-tests-input');
         const runsView = document.getElementById('runs-view');
         const testCasesView = document.getElementById('test-cases-view');
+        const rerunContainer = document.getElementById('rerun-container');
+        const rerunButton = document.getElementById('rerun-selected-button');
+        const rerunCount = document.getElementById('rerun-count');
+
+        let selectedTestsByRun = {};
+        let isReRunning = false;
+        let rerunTotalCount = 0;
+        let rerunReceivedCount = 0;
+        let rerunResultsSummary = {};
+
+        function updateRerunButton() {
+            const totalSelected = Object.values(selectedTestsByRun).reduce((sum, tcs) => sum + tcs.length, 0);
+            rerunCount.textContent = totalSelected;
+            rerunContainer.classList.toggle('hidden', totalSelected === 0);
+        }
+
+        function resetRerunState() {
+            isReRunning = false;
+            rerunTotalCount = 0;
+            rerunReceivedCount = 0;
+            rerunResultsSummary = {};
+            rerunButton.disabled = false;
+            const originalText = `Re-run Selected Tests (<span id="rerun-count">${rerunCount.textContent}</span>)`;
+            rerunButton.innerHTML = originalText;
+        }
 
         document.getElementById('generate-button').addEventListener('click', () => {
             vscode.postMessage({ command: 'generate' });
         });
+
         document.getElementById('run-button').addEventListener('click', () => {
             const numTests = parseInt(numTestsInput.value, 10);
             if (isNaN(numTests) || numTests <= 0) {
@@ -54,9 +83,58 @@
             numTestsInput.style.borderColor = 'var(--vscode-input-border)';
             vscode.postMessage({ command: 'run', numTests: numTests });
         });
+
         document.getElementById('view-runs-button').addEventListener('click', () => {
             vscode.postMessage({ command: 'get-runs' });
         });
+
+        rerunButton.addEventListener('click', () => {
+            rerunTotalCount = Object.values(selectedTestsByRun).reduce((sum, tcs) => sum + tcs.length, 0);
+            if (rerunTotalCount === 0) return;
+
+            isReRunning = true;
+            rerunReceivedCount = 0;
+            rerunResultsSummary = { OK: 0, WA: 0, TLE: 0, MLE: 0, RUNTIME_ERROR: 0, Error: 0 };
+            rerunButton.disabled = true;
+            rerunButton.textContent = 'Re-running...';
+
+            document.querySelectorAll('.test-case-checkbox:checked').forEach(checkbox => {
+                const item = checkbox.closest('.test-case-item');
+                if (item) {
+                    const resultElement = item.querySelector('.result');
+                    if (resultElement) resultElement.innerHTML = '<strong>Result:</strong> Re-running...';
+                }
+            });
+
+            vscode.postMessage({ command: 'rerun-tests', testCases: selectedTestsByRun });
+        });
+
+        testCasesView.addEventListener('change', event => {
+            if (event.target.classList.contains('test-case-checkbox')) {
+                const checkbox = event.target;
+                const runId = checkbox.dataset.runId;
+                const testCaseData = JSON.parse(decodeURIComponent(checkbox.dataset.testCase));
+
+                if (!selectedTestsByRun[runId]) {
+                    selectedTestsByRun[runId] = [];
+                }
+
+                if (checkbox.checked) {
+                    // Add if not already present
+                    if (!selectedTestsByRun[runId].some(tc => tc.testCase === testCaseData.testCase)) {
+                        selectedTestsByRun[runId].push(testCaseData);
+                    }
+                } else {
+                    // Remove
+                    selectedTestsByRun[runId] = selectedTestsByRun[runId].filter(tc => tc.testCase !== testCaseData.testCase);
+                    if (selectedTestsByRun[runId].length === 0) {
+                        delete selectedTestsByRun[runId];
+                    }
+                }
+                updateRerunButton();
+            }
+        });
+
 
         window.addEventListener('message', event => {
             const message = event.data;
@@ -69,55 +147,57 @@
                     initialView.classList.add('hidden');
                     actionsView.classList.remove('hidden');
                     fileInfo.innerHTML = 'Testing: <code>' + message.solutionFilename + '</code>';
-                    if (message.testFileExists) {
-                        generateView.classList.add('hidden');
-                        runView.classList.remove('hidden');
-                    } else {
-                        generateView.classList.remove('hidden');
-                        runView.classList.add('hidden');
-                    }
+                    initialView.classList.add('hidden');
+                    actionsView.classList.remove('hidden');
+                    fileInfo.innerHTML = 'Testing: <code>' + message.solutionFilename + '</code>';
+                    generateView.classList.toggle('hidden', message.testFileExists);
+                    runView.classList.toggle('hidden', !message.testFileExists);
                     break;
                 case 'test-running':
                     resultsView.innerHTML = '<p>Running tests...</p>';
                     runsView.innerHTML = '';
                     testCasesView.innerHTML = '';
+                    selectedTestsByRun = {};
+                    updateRerunButton();
                     break;
                 case 'testResult':
-                    let resultHtml = '';
-                    switch(message.status) {
-                        case 'Running':
+                    if (isReRunning) {
+                        rerunReceivedCount++;
+                        if (message.status && rerunResultsSummary.hasOwnProperty(message.status)) {
+                            rerunResultsSummary[message.status]++;
+                        }
+
+                        const testCaseItem = document.getElementById(`test-case-item-${message.runId}-${message.testCase}`);
+                        if (testCaseItem) {
+                            const detailsContainer = testCaseItem.querySelector('.test-case-details');
+                            if (detailsContainer) {
+                                detailsContainer.innerHTML = getTestCaseDetailsMarkup(message);
+                            }
+                        } else {
+                            // If the test case isn't visible, show its result in the main view
+                            resultsView.innerHTML += getResultMarkup(message);
+                        }
+
+                        if (rerunReceivedCount >= rerunTotalCount) {
+                            let summaryHtml = `<p>Re-run finished. Processed ${rerunReceivedCount} tests.</p>`;
+                            const summaryParts = Object.entries(rerunResultsSummary)
+                                .filter(([, count]) => count > 0)
+                                .map(([status, count]) => `<strong>${status}:</strong> ${count}`)
+                                .join(', ');
+                            
+                            if (summaryParts) {
+                                summaryHtml += `<p><strong>Summary:</strong> ${summaryParts}</p>`;
+                            }
+                            
+                            resultsView.innerHTML = summaryHtml;
+                            resetRerunState();
+                        }
+                    } else {
+                        if (message.status === 'Running') {
                             resultsView.innerHTML = `<p>Running test #${message.testCase}...</p>`;
-                            return;
-                        case 'OK':
-                            resultsView.innerHTML = `<p style="color: green;">Test #${message.testCase} Passed</p>`;
-                            break;
-                        case 'WA':
-                            resultHtml += `<p style="color: red;">Wrong Answer on test #${message.testCase}</p>`;
-                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
-                            resultHtml += '<strong>Your Output:</strong><pre>' + message.output + '</pre>';
-                            resultsView.innerHTML = resultHtml;
-                            break;
-                        case 'TLE':
-                            resultHtml += `<p style="color: orange;">Time Limit Exceeded on test #${message.testCase}</p>`;
-                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
-                            resultsView.innerHTML = resultHtml;
-                            break;
-                        case 'MLE':
-                            resultHtml += `<p style="color: orange;">Memory Limit Exceeded on test #${message.testCase}</p>`;
-                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
-                            resultsView.innerHTML = resultHtml;
-                            break;
-                         case 'RUNTIME_ERROR':
-                            resultHtml += `<p style="color: red;">Runtime Error on test #${message.testCase}</p>`;
-                            resultHtml += '<strong>Input:</strong><pre>' + message.input + '</pre>';
-                            if(message.message) resultHtml += '<strong>Error:</strong><pre>' + message.message + '</pre>';
-                            resultsView.innerHTML = resultHtml;
-                            break;
-                        case 'Error':
-                            resultHtml += '<p style="color: red;">Error</p>';
-                            resultHtml += '<pre>' + message.message + '</pre>';
-                            resultsView.innerHTML = resultHtml;
-                            break;
+                        } else {
+                            resultsView.innerHTML = getResultMarkup(message);
+                        }
                     }
                     break;
                 case 'show-runs':
@@ -140,15 +220,25 @@
                     });
                     break;
                 case 'show-test-cases':
-                    testCasesView.innerHTML = '';
+                    // We don't clear runsView anymore to allow switching
                     let testCasesHtml = `<h3>Test Cases for Run: ${message.runId}</h3>`;
                     if (message.testCases.length === 0) {
                         testCasesHtml += '<p>No test cases found for this run.</p>';
                     } else {
                         message.testCases.forEach(tc => {
                             const testCaseData = encodeURIComponent(JSON.stringify(tc));
+                            const isChecked = selectedTestsByRun[message.runId]?.some(selectedTc => selectedTc.testCase === tc.testCase);
                             testCasesHtml += `<div class="test-case-item">
-                                <p><input type="checkbox" class="test-case-checkbox" data-test-case='${testCaseData}'><strong>Test Case #${tc.testCase}</strong></p>
+                                <p>
+                                    <input 
+                                        type="checkbox" 
+                                        class="test-case-checkbox" 
+                                        data-test-case='${testCaseData}'
+                                        data-run-id="${message.runId}"
+                                        ${isChecked ? 'checked' : ''}
+                                    >
+                                    <strong>Test Case #${tc.testCase}</strong>
+                                </p>
                                 <p>Result: ${tc.lastResult}</p>
                                 <p>Time: ${tc.execTime} ms</p>
                                 <p>Memory: ${tc.memoryUsed} KB</p>
@@ -161,28 +251,8 @@
                                 </details>
                             </div>`;
                         });
-                        testCasesHtml += '<button id="rerun-selected-button">Re-run Selected Tests</button>';
                     }
                     testCasesView.innerHTML = testCasesHtml;
-
-                    const rerunButton = document.getElementById('rerun-selected-button');
-                    if (rerunButton) {
-                        rerunButton.addEventListener('click', () => {
-                            const selectedTestCases = [];
-                            document.querySelectorAll('.test-case-checkbox:checked').forEach(checkbox => {
-                                selectedTestCases.push(JSON.parse(decodeURIComponent(checkbox.dataset.testCase)));
-                            });
-
-                            if (selectedTestCases.length > 0) {
-                                const testCasesByRun = {
-                                    [message.runId]: selectedTestCases
-                                };
-                                vscode.postMessage({ command: 'rerun-tests', testCases: testCasesByRun });
-                            } else {
-                                // Maybe show a message to the user that no tests are selected
-                            }
-                        });
-                    }
                     break;
             }
         });

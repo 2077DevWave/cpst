@@ -92,7 +92,7 @@ export class UIService implements IUIService {
         }
 
         this._reporter.reportHistoryCleared();
-        this._reporter.reportTestRunning();
+        // this._reporter.reportTestRunning();  // its clear the screen fully (we dont want that)
 
         const solutionPath = this._currentSolutionFile.fsPath;
         const checkerPath = this._fileManager.getCheckerFileUri(this._currentSolutionFile).fsPath;
