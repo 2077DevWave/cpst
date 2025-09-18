@@ -18,4 +18,8 @@ export class ResultService implements IResultService {
     public saveResult(result: IJsonTestResult, paths: ITestPaths): void {
         this._cpstFolderManager.saveResult(paths.runFolderPath, result);
     }
+
+    public updateResult(result: IJsonTestResult, runId: IRunId): void{
+        this._cpstFolderManager.updateTestResult(runId, result);
+    }
 }

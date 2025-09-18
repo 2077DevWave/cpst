@@ -48,6 +48,22 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         return path.join(this.getRunResultDirPath(runId), `test_${testCaseNo}.json`) as ITestCaseJsonPath;
     }
 
+    public getTestCaseNo(testCasePath: ITestCaseJsonPath): number{
+        return Number.parseInt(path.basename(testCasePath).replace("test_", "").replace(".json", ""));
+    }
+
+    public getTestCaseResultData(testCasePath: ITestCaseJsonPath): IJsonTestResult {
+        let testResult: IJsonTestResult = {testCase: this.getTestCaseNo(testCasePath)};
+        if (this._fileManager.exists(testCasePath)) {
+            try {
+                testResult = JSON.parse(this._fileManager.readFile(testCasePath));
+            } catch (e) {
+                testResult = {testCase: this.getTestCaseNo(testCasePath)};
+            }
+        }
+        return testResult;
+    }
+
     public getTestPaths(solutionPath: ISolutionPath, runId: IRunId): ITestPaths{
         return {tempDir: this.getTempDirPath(), resultsDir: this.getResultDirPath(), solutionPath: solutionPath, runFolderPath: this.getRunResultDirPath(runId), mainJsonPath: this.getMainJsonPath()};
     }

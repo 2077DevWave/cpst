@@ -1,6 +1,6 @@
 
 import { Uri } from "vscode";
-import { ITestResult, IExecutablePaths, ITestRunResult, IJsonTestResult, ITestPaths } from "./datastructures";
+import { ITestResult, IExecutablePaths, ITestRunResult, IJsonTestResult, ITestPaths, IRunId } from "./datastructures";
 
 /**
  * Manages the creation and verification of test files (generator, checker).
@@ -35,6 +35,15 @@ export interface ICompilationService {
     generatorValidatorPath: string,
     checkerPath: string,
   ): Promise<IExecutablePaths | undefined>;
+
+  /**
+   * Compiles the solution and checker files for re-running tests with existing inputs.
+   * The generator is not needed in this case.
+   * @param solutionPath The file path to the C++ solution.
+   * @param checkerPath The file path to the checker.
+   * @returns A promise that resolves with the paths to the executables, or undefined if compilation fails.
+   */
+  compileForRerun(solutionPath: string, checkerPath: string): Promise<IExecutablePaths | undefined>
 }
 
 /**
@@ -74,14 +83,24 @@ export interface ITestRunnerService {
 export interface IResultService {
   /**
    * Initializes the result storage for a new test run.
+   * @param solutionPath The path to the solution file, used to set up the result directories.
+   * @returns An object containing all the necessary paths for the test run.
    */
   initialize(solutionPath : string): ITestPaths;
 
   /**
    * Saves the result of a single test case.
    * @param result The test result to save.
+   * @param paths The paths object for the current test run.
    */
-  saveResult(result: IJsonTestResult, paths: ITestPaths): void
+  saveResult(result: IJsonTestResult, paths: ITestPaths): void;
+
+  /**
+   * Updates an existing test case result.
+   * @param result The updated test result object.
+   * @param runId The ID of the run containing the test case.
+   */
+  updateResult(result: IJsonTestResult, runId: IRunId): void;
 }
 
 /**
@@ -93,6 +112,7 @@ export interface IOrchestrationService {
    * @param solutionPath The file path to the C++ solution.
    * @param generatorValidatorPath The file path to the generator/validator.
    * @param checkerPath The file path to the checker.
+   * @param numTests The number of test cases to run.
    */
   run(
     solutionPath: string,
@@ -100,6 +120,14 @@ export interface IOrchestrationService {
     checkerPath: string,
     numTests: number
   ): Promise<void>;
+
+  /**
+   * Re-runs a specific set of test cases with existing inputs.
+   * @param solutionPath The file path to the C++ solution.
+   * @param checkerPath The file path to the checker.
+   * @param testCases A map of run IDs to the test cases to be re-run.
+   */
+  reRun(solutionPath: string, checkerPath: string, testCases: { [key: IRunId]: IJsonTestResult[] }): Promise<void>;
 }
 
 /**
@@ -113,6 +141,7 @@ export interface IUIService {
 
   /**
    * Handles the command to run the stress test.
+   * @param numTests The number of test cases to run.
    */
   runStressTest(numTests: number): Promise<void>;
 
@@ -132,4 +161,10 @@ export interface IUIService {
    * @param runId The ID of the run.
    */
   getTestCasesForRun(runId: string): Promise<void>;
+
+  /**
+   * Handles the command to re-run a selection of tests.
+   * @param testCases A map of run IDs to the test cases to be re-run.
+   */
+  reRunTests(testCases: { [key: IRunId]: IJsonTestResult[] }): Promise<void>
 }

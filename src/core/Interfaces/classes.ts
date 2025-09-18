@@ -160,6 +160,16 @@ export interface ICompilationManager {
      * @returns A promise that resolves with the paths to the executables, or null if compilation fails.
      */
     compile(tempDir: string, solutionPath: string, generatorValidatorPath: string, checkerPath: string): Promise<IExecutablePaths | null>;
+
+    /**
+     * Compiles the solution and checker files for re-running a test with existing input.
+     * This is used when the generator is not needed.
+     * @param tempDir The temporary directory for compilation.
+     * @param solutionPath The file path to the C++ solution.
+     * @param checkerPath The file path to the checker.
+     * @returns A promise that resolves with the paths to the executables, or null if compilation fails.
+     */
+    compileForReRun(tempDir: string, solutionPath: string, checkerPath: string): Promise<IExecutablePaths | null>;
 }
 
 /**
@@ -239,6 +249,26 @@ export interface ICPSTFolderManager {
      */
     getTestCaseResultPath(runId: IRunId, testCaseNo: number): ITestCaseJsonPath;
 
+    /**
+    * Extracts the test case number from its result file path.
+    * @param testCasePath The path to the test case's result file.
+    * @returns The test case number.
+    */
+    getTestCaseNo(testCasePath: ITestCaseJsonPath): number;
+
+    /**
+    * Reads and parses the JSON data for a specific test case result.
+    * @param testCasePath The path to the test case's result file.
+    * @returns The parsed test case result object.
+    */
+    getTestCaseResultData(testCasePath: ITestCaseJsonPath): IJsonTestResult;
+
+    /**
+    * Constructs all the necessary paths for a given test run.
+    * @param solutionPath The path of the solution file.
+    * @param runId The ID of the run.
+    * @returns An object containing all relevant paths for the test run.
+    */
     getTestPaths(solutionPath: ISolutionPath, runId: IRunId): ITestPaths;
 
     /**

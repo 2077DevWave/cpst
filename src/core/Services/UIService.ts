@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import { IFileManager, ITestReporter, ICPSTFolderManager } from '../Interfaces/classes';
 import { IOrchestrationService, ITestFileService, IUIService } from '../Interfaces/services';
-import { IRunId, ISolutionPath } from '../Interfaces/datastructures';
+import { IJsonTestResult, IRunId, ISolutionPath } from '../Interfaces/datastructures';
 
 export class UIService implements IUIService {
     private _currentSolutionFile?: vscode.Uri;
@@ -83,6 +83,29 @@ export class UIService implements IUIService {
         }
 
         await this._orchestrationService.run(solutionPath, genValPath, checkerPath, numTests);
+    }
+
+    public async reRunTests(testCases: { [key: IRunId]: IJsonTestResult[] }): Promise<void> {
+        if (!this._currentSolutionFile) {
+            this._reporter.reportError("Cannot run test: Could not determine the solution file.");
+            return;
+        }
+
+        this._reporter.reportHistoryCleared();
+        this._reporter.reportTestRunning();
+
+        const solutionPath = this._currentSolutionFile.fsPath;
+        const checkerPath = this._fileManager.getCheckerFileUri(this._currentSolutionFile).fsPath;
+
+        if (!this._fileManager.exists(checkerPath)) {
+            this._reporter.reportProgress({
+                command: "error",
+                message: "Stress test files not found. Please generate them first.",
+            });
+            return;
+        }
+
+        await this._orchestrationService.reRun(solutionPath, checkerPath, testCases);
     }
 
     public async getRunsForActiveSolution(): Promise<void> {

@@ -14,4 +14,10 @@ export class CompilationService implements ICompilationService {
         const executables = await this._compilationManager.compile(tempDir, solutionPath, generatorValidatorPath, checkerPath);
         return executables ?? undefined;
     }
+
+    public async compileForRerun(solutionPath: string, checkerPath: string): Promise<IExecutablePaths | undefined> {
+        const tempDir = this._cpstFolderManager.getTempDirPath();
+        const executables = await this._compilationManager.compileForReRun(tempDir, solutionPath, checkerPath);
+        return executables ?? undefined;
+    }
 }
