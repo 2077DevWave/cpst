@@ -104,6 +104,9 @@ export class MyPanelProvider
         case "get-test-cases":
           this._uiService.getTestCasesForRun(message.runId);
           return;
+        case "rerun-tests":
+            this._uiService.reRunTests(message.testCases);
+            return;
       }
     });
 
@@ -146,6 +149,9 @@ export class MyPanelProvider
         "diff2html.min.js"
       )
     );
+    const webviewCssUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "out", "webview.css")
+    );
     const htmlPath = vscode.Uri.joinPath(
       this._extensionUri,
       "out",
@@ -157,6 +163,10 @@ export class MyPanelProvider
     htmlContent = htmlContent.replace(
       "%DIFF2HTML_CSS%",
       diff2htmlCssUri.toString()
+    );
+    htmlContent = htmlContent.replace(
+        "%WEBVIEW_CSS%",
+        webviewCssUri.toString()
     );
     htmlContent = htmlContent.replace(
       "%DIFF2HTML_JS%",

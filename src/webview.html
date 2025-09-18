@@ -5,41 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stress Tester</title>
     <link rel="stylesheet" href="%DIFF2HTML_CSS%">
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 10px; }
-        .hidden { display: none; }
-        #file-info { margin-bottom: 15px; font-style: italic; color: var(--vscode-descriptionForeground); }
-        button {
-            width: 100%; padding: 8px; border: none;
-            background-color: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
-            cursor: pointer; text-align: center;
-            margin-top: 5px;
-        }
-        button:hover { background-color: var(--vscode-button-hoverBackground); }
-        input {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid var(--vscode-input-border);
-            background-color: var(--vscode-input-background);
-            color: var(--vscode-input-foreground);
-            box-sizing: border-box;
-        }
-        .run-item {
-            padding: 5px;
-            cursor: pointer;
-            border: 1px solid var(--vscode-sideBar-border);
-            margin-bottom: 3px;
-        }
-        .run-item:hover {
-            background-color: var(--vscode-list-hoverBackground);
-        }
-        .test-case-item {
-            margin-bottom: 10px;
-            padding: 5px;
-            border: 1px solid var(--vscode-peekView-border);
-        }
-    </style>
+    <link rel="stylesheet" href="%WEBVIEW_CSS%">
 </head>
 <body>
     <div id="initial-view">
@@ -174,14 +140,15 @@
                     });
                     break;
                 case 'show-test-cases':
-                    runsView.innerHTML = '';
+                    testCasesView.innerHTML = '';
                     let testCasesHtml = `<h3>Test Cases for Run: ${message.runId}</h3>`;
                     if (message.testCases.length === 0) {
                         testCasesHtml += '<p>No test cases found for this run.</p>';
                     } else {
                         message.testCases.forEach(tc => {
+                            const testCaseData = encodeURIComponent(JSON.stringify(tc));
                             testCasesHtml += `<div class="test-case-item">
-                                <p><strong>Test Case #${tc.testCase}</strong></p>
+                                <p><input type="checkbox" class="test-case-checkbox" data-test-case='${testCaseData}'><strong>Test Case #${tc.testCase}</strong></p>
                                 <p>Result: ${tc.lastResult}</p>
                                 <p>Time: ${tc.execTime} ms</p>
                                 <p>Memory: ${tc.memoryUsed} KB</p>
@@ -194,8 +161,28 @@
                                 </details>
                             </div>`;
                         });
+                        testCasesHtml += '<button id="rerun-selected-button">Re-run Selected Tests</button>';
                     }
                     testCasesView.innerHTML = testCasesHtml;
+
+                    const rerunButton = document.getElementById('rerun-selected-button');
+                    if (rerunButton) {
+                        rerunButton.addEventListener('click', () => {
+                            const selectedTestCases = [];
+                            document.querySelectorAll('.test-case-checkbox:checked').forEach(checkbox => {
+                                selectedTestCases.push(JSON.parse(decodeURIComponent(checkbox.dataset.testCase)));
+                            });
+
+                            if (selectedTestCases.length > 0) {
+                                const testCasesByRun = {
+                                    [message.runId]: selectedTestCases
+                                };
+                                vscode.postMessage({ command: 'rerun-tests', testCases: testCasesByRun });
+                            } else {
+                                // Maybe show a message to the user that no tests are selected
+                            }
+                        });
+                    }
                     break;
             }
         });

@@ -44,7 +44,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
-    "build": "npm run compile && cp src/webview.html out/ && cp -r assets out/",
+    "build": "npm run compile && cp src/webview.html out/ && cp src/webview.css out/ && cp -r assets out/",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
