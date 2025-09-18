@@ -121,4 +121,15 @@ export interface IUIService {
    * @param activeFileUri The URI of the active file in the editor.
    */
   updateActiveFile(activeFileUri: Uri | undefined): void;
+
+  /**
+   * Handles the command to get all runs for the active solution.
+   */
+  getRunsForActiveSolution(): Promise<void>;
+
+  /**
+   * Handles the command to get all test cases for a given run.
+   * @param runId The ID of the run.
+   */
+  getTestCasesForRun(runId: string): Promise<void>;
 }

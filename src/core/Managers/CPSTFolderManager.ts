@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { IFileManager, ICPSTFolderManager } from '../Interfaces/classes';
 import { ITestPaths, IJsonTestResult, ITempDirPath, IResultDirPath, IRunDirPath, ISolutionName, IRunId, IMainJson, IMainJsonPath, ITestCaseJsonPath, ISolutionPath} from '../Interfaces/datastructures';
+import { FileManager } from './FileManager';
 
 export class CPSTFolderManager implements ICPSTFolderManager {
     constructor(
@@ -20,11 +21,19 @@ export class CPSTFolderManager implements ICPSTFolderManager {
     }
 
     public getTempDirPath(): ITempDirPath {
-        return path.join(this._baseDir, 'temp') as ITempDirPath;
+        const tempPath = path.join(this._baseDir, 'temp');
+        if(!this._fileManager.exists(tempPath)){
+            this._fileManager.createDirectory(tempPath);
+        }
+        return tempPath as ITempDirPath;
     }
 
     public getResultDirPath(): IResultDirPath{
-        return path.join(this._baseDir, 'results') as IResultDirPath;
+        const resultPath = path.join(this._baseDir, 'results');
+        if(!this._fileManager.exists(resultPath)){
+            this._fileManager.createDirectory(resultPath);
+        }
+        return resultPath as IResultDirPath;
     }
 
     public getMainJsonPath(): IMainJsonPath{

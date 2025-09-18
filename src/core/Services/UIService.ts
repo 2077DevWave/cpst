@@ -1,7 +1,8 @@
 
 import * as vscode from 'vscode';
-import { IFileManager, ITestReporter } from '../Interfaces/classes';
+import { IFileManager, ITestReporter, ICPSTFolderManager } from '../Interfaces/classes';
 import { IOrchestrationService, ITestFileService, IUIService } from '../Interfaces/services';
+import { IRunId, ISolutionPath } from '../Interfaces/datastructures';
 
 export class UIService implements IUIService {
     private _currentSolutionFile?: vscode.Uri;
@@ -10,7 +11,8 @@ export class UIService implements IUIService {
         private readonly _fileManager: IFileManager,
         private readonly _testFileService: ITestFileService,
         private readonly _orchestrationService: IOrchestrationService,
-        private readonly _reporter: ITestReporter
+        private readonly _reporter: ITestReporter,
+        private readonly _cpstFolderManager: ICPSTFolderManager
     ) {}
 
     public updateActiveFile(activeFileUri: vscode.Uri | undefined): void {
@@ -81,5 +83,27 @@ export class UIService implements IUIService {
         }
 
         await this._orchestrationService.run(solutionPath, genValPath, checkerPath, numTests);
+    }
+
+    public async getRunsForActiveSolution(): Promise<void> {
+        if (!this._currentSolutionFile) {
+            this._reporter.reportError("No active C++ solution file selected.");
+            return;
+        }
+        const solutionName = this._cpstFolderManager.getSolutionName(this._currentSolutionFile.fsPath as ISolutionPath);
+        const runs = this._cpstFolderManager.getallRuns(solutionName);
+        this._reporter.reportProgress({
+            command: "show-runs",
+            runs: runs,
+        });
+    }
+
+    public async getTestCasesForRun(runId: string): Promise<void> {
+        const testCases = this._cpstFolderManager.getallTestResults(runId as IRunId);
+        this._reporter.reportProgress({
+            command: "show-test-cases",
+            testCases: testCases,
+            runId: runId,
+        });
     }
 }

@@ -98,6 +98,12 @@ export class MyPanelProvider
         case "run":
           this._uiService.runStressTest(message.numTests);
           return;
+        case "get-runs":
+          this._uiService.getRunsForActiveSolution();
+          return;
+        case "get-test-cases":
+          this._uiService.getTestCasesForRun(message.runId);
+          return;
       }
     });
 

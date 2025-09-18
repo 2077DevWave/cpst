@@ -25,6 +25,20 @@
             color: var(--vscode-input-foreground);
             box-sizing: border-box;
         }
+        .run-item {
+            padding: 5px;
+            cursor: pointer;
+            border: 1px solid var(--vscode-sideBar-border);
+            margin-bottom: 3px;
+        }
+        .run-item:hover {
+            background-color: var(--vscode-list-hoverBackground);
+        }
+        .test-case-item {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid var(--vscode-peekView-border);
+        }
     </style>
 </head>
 <body>
@@ -41,10 +55,13 @@
             <label for="num-tests-input">Number of Tests:</label>
             <input type="number" id="num-tests-input" value="100" min="1">
             <button id="run-button">Run Stress Test</button>
+            <button id="view-runs-button">View Runs</button>
         </div>
     </div>
     
     <div id="results-view"></div>
+    <div id="runs-view"></div>
+    <div id="test-cases-view"></div>
 
     <script src="%DIFF2HTML_JS%"></script>
     <script nonce="%NONCE%">
@@ -56,6 +73,8 @@
         const fileInfo = document.getElementById('file-info');
         const resultsView = document.getElementById('results-view');
         const numTestsInput = document.getElementById('num-tests-input');
+        const runsView = document.getElementById('runs-view');
+        const testCasesView = document.getElementById('test-cases-view');
 
         document.getElementById('generate-button').addEventListener('click', () => {
             vscode.postMessage({ command: 'generate' });
@@ -68,6 +87,9 @@
             }
             numTestsInput.style.borderColor = 'var(--vscode-input-border)';
             vscode.postMessage({ command: 'run', numTests: numTests });
+        });
+        document.getElementById('view-runs-button').addEventListener('click', () => {
+            vscode.postMessage({ command: 'get-runs' });
         });
 
         window.addEventListener('message', event => {
@@ -91,6 +113,8 @@
                     break;
                 case 'test-running':
                     resultsView.innerHTML = '<p>Running tests...</p>';
+                    runsView.innerHTML = '';
+                    testCasesView.innerHTML = '';
                     break;
                 case 'testResult':
                     let resultHtml = '';
@@ -129,6 +153,49 @@
                             resultsView.innerHTML = resultHtml;
                             break;
                     }
+                    break;
+                case 'show-runs':
+                    resultsView.innerHTML = '';
+                    testCasesView.innerHTML = '';
+                    let runsHtml = '<h3>Past Runs:</h3>';
+                    if (message.runs.length === 0) {
+                        runsHtml += '<p>No runs found for this solution.</p>';
+                    } else {
+                        message.runs.forEach(runId => {
+                            runsHtml += `<div class="run-item" data-run-id="${runId}">${runId}</div>`;
+                        });
+                    }
+                    runsView.innerHTML = runsHtml;
+                    document.querySelectorAll('.run-item').forEach(item => {
+                        item.addEventListener('click', event => {
+                            const runId = event.target.getAttribute('data-run-id');
+                            vscode.postMessage({ command: 'get-test-cases', runId: runId });
+                        });
+                    });
+                    break;
+                case 'show-test-cases':
+                    runsView.innerHTML = '';
+                    let testCasesHtml = `<h3>Test Cases for Run: ${message.runId}</h3>`;
+                    if (message.testCases.length === 0) {
+                        testCasesHtml += '<p>No test cases found for this run.</p>';
+                    } else {
+                        message.testCases.forEach(tc => {
+                            testCasesHtml += `<div class="test-case-item">
+                                <p><strong>Test Case #${tc.testCase}</strong></p>
+                                <p>Result: ${tc.lastResult}</p>
+                                <p>Time: ${tc.execTime} ms</p>
+                                <p>Memory: ${tc.memoryUsed} KB</p>
+                                <details>
+                                    <summary>Details</summary>
+                                    <p><strong>Input:</strong></p><pre>${tc.input}</pre>
+                                    <p><strong>Output:</strong></p><pre>${tc.userOutput}</pre>
+                                    ${tc.reason ? `<p><strong>Reason:</strong></p><pre>${tc.reason}</pre>` : ''}
+                                    ${tc.message ? `<p><strong>Message:</strong></p><pre>${tc.message}</pre>` : ''}
+                                </details>
+                            </div>`;
+                        });
+                    }
+                    testCasesView.innerHTML = testCasesHtml;
                     break;
             }
         });

@@ -61,7 +61,8 @@ export function activate(context: vscode.ExtensionContext) {
         fileManager,
         testFileService,
         orchestrationService,
-        testReporterProxy
+        testReporterProxy,
+        cpstFolderManager
     );
 
     // UI Layer
