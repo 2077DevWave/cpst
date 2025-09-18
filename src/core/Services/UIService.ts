@@ -83,6 +83,8 @@ export class UIService implements IUIService {
         }
 
         await this._orchestrationService.run(solutionPath, genValPath, checkerPath, numTests);
+
+        this._reporter.reportHistoryCleared();
     }
 
     public async reRunTests(testCases: { [key: IRunId]: IJsonTestResult[] }): Promise<void> {

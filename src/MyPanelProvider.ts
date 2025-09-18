@@ -33,6 +33,9 @@ export class MyPanelProvider
 
   // Implementation of ITestReporter
   public reportProgress(message: any): void {
+    if(message.command === 'error'){
+      this.reportError(message.message);
+    }
     this._view?.webview.postMessage(message);
   }
 
