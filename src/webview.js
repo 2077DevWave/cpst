@@ -119,7 +119,7 @@ document.getElementById('view-runs-button').addEventListener('click', () => {
 
 rerunButton.addEventListener('click', () => {
     const rerunTotalCount = Object.values(selectedTestsByRun).reduce((sum, tcs) => sum + tcs.length, 0);
-    if (rerunTotalCount === 0) return;
+    if (rerunTotalCount === 0) {return;}
 
     isReRunning = true;
     rerunButton.disabled = true;
