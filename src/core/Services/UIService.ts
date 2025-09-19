@@ -116,7 +116,7 @@ export class UIService implements IUIService {
             return;
         }
         const solutionName = this._cpstFolderManager.getSolutionName(this._currentSolutionFile.fsPath as ISolutionPath);
-        const runs = this._cpstFolderManager.getallRuns(solutionName);
+        const runs = this._cpstFolderManager.getAllRuns(solutionName);
         this._reporter.reportProgress({
             command: "show-runs",
             runs: runs,
@@ -124,7 +124,7 @@ export class UIService implements IUIService {
     }
 
     public async getTestCasesForRun(runId: string): Promise<void> {
-        const testCases = this._cpstFolderManager.getallTestResults(runId as IRunId);
+        const testCases = this._cpstFolderManager.getAllTestResults(runId as IRunId);
         this._reporter.reportProgress({
             command: "show-test-cases",
             testCases: testCases,

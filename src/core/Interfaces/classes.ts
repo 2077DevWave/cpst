@@ -347,14 +347,14 @@ export interface ICPSTFolderManager {
      * Gets a list of all solutions that have been tested.
      * @returns An array of solution names.
      */
-    getallSolutions(): ISolutionName[];
+    getAllSolutions(): ISolutionName[];
 
     /**
      * Gets a list of all test runs for a given solution.
      * @param solutionName The name of the solution.
      * @returns An array of run folder names (timestamps).
      */
-    getallRuns(solutionName: ISolutionName): IRunId[];
+    getAllRuns(solutionName: ISolutionName): IRunId[];
 
     /**
      * Retrieves all test results for a specific test run.
@@ -362,7 +362,7 @@ export interface ICPSTFolderManager {
      * @param runId The ID of the test run (timestamp).
      * @returns An array of test results.
      */
-    getallTestResults(runId: IRunId): IJsonTestResult[];
+    getAllTestResults(runId: IRunId): IJsonTestResult[];
 
     /**
      * Deletes a solution and all its associated runs.

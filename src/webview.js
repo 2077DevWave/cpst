@@ -63,10 +63,12 @@ function getTestCaseDetailsHtml(result) {
     const status = result.status || result.lastResult;
     const time = result.time || result.execTime;
     const memory = result.memory || result.memoryUsed;
-    const input = result.input;
-    const output = result.output || result.userOutput;
-    const reason = result.reason;
-    const message = result.message;
+
+    const safe = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    };
 
     return `
         <p>Result: ${status}</p>
@@ -74,10 +76,10 @@ function getTestCaseDetailsHtml(result) {
         <p>Memory: ${memory} KB</p>
         <details>
             <summary>Details</summary>
-            <p><strong>Input:</strong></p><pre>${input || ''}</pre>
-            <p><strong>Output:</strong></p><pre>${output || ''}</pre>
-            ${reason ? `<p><strong>Reason:</strong></p><pre>${reason}</pre>` : ''}
-            ${message ? `<p><strong>Message:</strong></p><pre>${message}</pre>` : ''}
+            <p><strong>Input:</strong></p><pre>${safe(result.input)}</pre>
+            <p><strong>Output:</strong></p><pre>${safe(result.output || result.userOutput)}</pre>
+            ${result.reason ? `<p><strong>Reason:</strong></p><pre>${safe(result.reason)}</pre>` : ''}
+            ${result.message ? `<p><strong>Message:</strong></p><pre>${safe(result.message)}</pre>` : ''}
         </details>
     `;
 }

@@ -230,46 +230,46 @@ describe('CPSTFolderManager', () => {
         const runId = 'run-id' as IRunId;
         const mainJson: IMainJson = { [solutionName]: [runId], ['other.cpp' as ISolutionName]: [] };
 
-        describe('getallSolutions', () => {
+        describe('getAllSolutions', () => {
             it('should return all solution names from main.json', () => {
                 jest.spyOn(folderManager, 'readMainJson').mockReturnValue(mainJson);
-                const solutions = folderManager.getallSolutions();
+                const solutions = folderManager.getAllSolutions();
                 expect(solutions).toEqual(['solution.cpp', 'other.cpp']);
             });
 
             it('should return an empty array on error', () => {
                 jest.spyOn(folderManager, 'readMainJson').mockImplementation(() => { throw new Error(); });
-                const solutions = folderManager.getallSolutions();
+                const solutions = folderManager.getAllSolutions();
                 expect(solutions).toEqual([]);
             });
         });
 
-        describe('getallRuns', () => {
+        describe('getAllRuns', () => {
             it('should return all runs for a given solution', () => {
                 jest.spyOn(folderManager, 'readMainJson').mockReturnValue(mainJson);
-                const runs = folderManager.getallRuns(solutionName);
+                const runs = folderManager.getAllRuns(solutionName);
                 expect(runs).toEqual([runId]);
             });
 
             it('should return an empty array if solution does not exist', () => {
                 jest.spyOn(folderManager, 'readMainJson').mockReturnValue(mainJson);
-                const runs = folderManager.getallRuns('nonexistent.cpp' as ISolutionName);
+                const runs = folderManager.getAllRuns('nonexistent.cpp' as ISolutionName);
                 expect(runs).toEqual([]);
             });
 
             it('should return an empty array on error', () => {
                 jest.spyOn(folderManager, 'readMainJson').mockImplementation(() => { throw new Error(); });
-                const runs = folderManager.getallRuns(solutionName);
+                const runs = folderManager.getAllRuns(solutionName);
                 expect(runs).toEqual([]);
             });
         });
 
-        describe('getallTestResults', () => {
+        describe('getAllTestResults', () => {
             const runFolderPath = `${baseDir}/results/${runId}` as IRunDirPath;
 
             it('should return an empty array if the run folder does not exist', () => {
                 mockFileManager.exists.mockReturnValue(false);
-                const results = folderManager.getallTestResults(runId);
+                const results = folderManager.getAllTestResults(runId);
                 expect(mockFileManager.exists).toHaveBeenCalledWith(runFolderPath);
                 expect(results).toEqual([]);
             });
@@ -283,7 +283,7 @@ describe('CPSTFolderManager', () => {
                     .mockReturnValueOnce(JSON.stringify(testResult1))
                     .mockReturnValueOnce(JSON.stringify(testResult2));
 
-                const results = folderManager.getallTestResults(runId);
+                const results = folderManager.getAllTestResults(runId);
 
                 expect(results).toEqual([testResult1, testResult2]);
             });
@@ -297,7 +297,7 @@ describe('CPSTFolderManager', () => {
                     .mockReturnValueOnce(JSON.stringify(testResult1))
                     .mockReturnValueOnce('invalid json');
 
-                const results = folderManager.getallTestResults(runId);
+                const results = folderManager.getAllTestResults(runId);
 
                 expect(results).toEqual([testResult1]);
                 expect(consoleErrorSpy).toHaveBeenCalled();
@@ -338,7 +338,7 @@ describe('CPSTFolderManager', () => {
                 const runFolderPath = `${baseDir}/results/${runId}`;
                 mockFileManager.exists.mockReturnValue(true);
                 jest.spyOn(folderManager, 'readMainJson').mockReturnValue(JSON.parse(JSON.stringify(mainJson)));
-                jest.spyOn(folderManager, 'getallSolutions').mockReturnValue([solutionName]);
+                jest.spyOn(folderManager, 'getAllSolutions').mockReturnValue([solutionName]);
 
 
                 folderManager.deleteRun(runId);
@@ -351,7 +351,7 @@ describe('CPSTFolderManager', () => {
             it('should not fail if run folder does not exist', () => {
                 mockFileManager.exists.mockReturnValue(false);
                 jest.spyOn(folderManager, 'readMainJson').mockReturnValue(JSON.parse(JSON.stringify(mainJson)));
-                jest.spyOn(folderManager, 'getallSolutions').mockReturnValue([solutionName]);
+                jest.spyOn(folderManager, 'getAllSolutions').mockReturnValue([solutionName]);
 
                 folderManager.deleteRun(runId);
 

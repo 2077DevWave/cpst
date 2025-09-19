@@ -130,7 +130,7 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         this._fileManager.writeFile(resultFilePath, JSON.stringify(result, null, 4));
     }
 
-    public getallSolutions(): ISolutionName[] {
+    public getAllSolutions(): ISolutionName[] {
         try {
             const mainJson = this.readMainJson();
             return Object.keys(mainJson) as ISolutionName[];
@@ -139,7 +139,7 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         }
     }
 
-    public getallRuns(solutionName: ISolutionName): IRunId[] {
+    public getAllRuns(solutionName: ISolutionName): IRunId[] {
         try {
             const mainJson = this.readMainJson();
             return mainJson[solutionName] || [];
@@ -148,7 +148,7 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         }
     }
 
-    public getallTestResults(runId: IRunId): IJsonTestResult[] {
+    public getAllTestResults(runId: IRunId): IJsonTestResult[] {
         const runFolderPath = this.getRunResultDirPath(runId);
         if (!this._fileManager.exists(runFolderPath)) {
             return [];
@@ -191,7 +191,7 @@ export class CPSTFolderManager implements ICPSTFolderManager {
         }
 
         let mainJson = this.readMainJson();
-        const solutionsNames = this.getallSolutions();
+        const solutionsNames = this.getAllSolutions();
         for(const solutionName of solutionsNames){
             if (mainJson[solutionName]) {
                 mainJson[solutionName] = mainJson[solutionName].filter(id => id !== runId);
