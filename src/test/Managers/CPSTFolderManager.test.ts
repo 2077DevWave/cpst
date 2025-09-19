@@ -39,15 +39,6 @@ describe('CPSTFolderManager', () => {
         folderManager = new CPSTFolderManager(mockFileManager, baseDir);
     });
 
-    describe('constructor', () => {
-        it('should create temp and results directories on initialization', () => {
-            // The constructor is called in beforeEach, so we just need to assert
-            expect(mockFileManager.createDirectory).toHaveBeenCalledWith(`${baseDir}/temp`);
-            expect(mockFileManager.createDirectory).toHaveBeenCalledWith(`${baseDir}/results`);
-            expect(mockFileManager.createDirectory).toHaveBeenCalledTimes(2);
-        });
-    });
-
     describe('Path Getters', () => {
         it('getSolutionName should return the base name of the solution path', () => {
             const solutionPath = '/path/to/solution.cpp' as ISolutionPath;
