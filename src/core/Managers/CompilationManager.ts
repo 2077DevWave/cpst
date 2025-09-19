@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { ICompilationManager, ICompiler } from '../Interfaces/classes';
-import { IExecutablePaths } from '../Interfaces/datastructures';
+import { IExecutablePaths, ITempDirPath } from '../Interfaces/datastructures';
 
 export class CompilationManager implements ICompilationManager {
     constructor(
@@ -14,6 +14,17 @@ export class CompilationManager implements ICompilationManager {
 
         if (!await this._compiler.compile(solutionPath, solutionExec)) {return null;}
         if (!await this._compiler.compile(generatorValidatorPath, generatorExec)) {return null;}
+        if (!await this._compiler.compile(checkerPath, checkerExec)) {return null;}
+
+        return { solutionExec, generatorExec, checkerExec };
+    }
+
+    public async compileForReRun(tempDir: string, solutionPath: string, checkerPath: string): Promise<IExecutablePaths | null> {
+        const solutionExec = path.join(tempDir, "solution_exec");
+        const generatorExec = "";
+        const checkerExec = path.join(tempDir, "checker_exec");
+
+        if (!await this._compiler.compile(solutionPath, solutionExec)) {return null;}
         if (!await this._compiler.compile(checkerPath, checkerExec)) {return null;}
 
         return { solutionExec, generatorExec, checkerExec };

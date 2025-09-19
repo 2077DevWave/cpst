@@ -10,7 +10,12 @@ export class TestRunnerService implements ITestRunnerService {
     ) {}
 
     public async runSingleTest(solutionExec: string, generatorExec: string, checkerExec: string): Promise<ITestRunResult> {
-        const tempDir = this._cpstFolderManager.getTempDir();
+        const tempDir = this._cpstFolderManager.getTempDirPath();
         return this._testRunner.run(tempDir, solutionExec, generatorExec, checkerExec);
+    }
+
+    public async runSingleTestWithInput(solutionExec: string, checkerExec: string, input: string): Promise<ITestRunResult> {
+        const tempDir = this._cpstFolderManager.getTempDirPath();
+        return this._testRunner.runWithInput(tempDir, solutionExec, checkerExec, input);
     }
 }

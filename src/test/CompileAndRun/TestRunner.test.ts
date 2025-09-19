@@ -21,6 +21,8 @@ const mockFileManager: jest.Mocked<IFileManager> = {
     getGenValFileUri: jest.fn(),
     getCheckerFileUri: jest.fn(),
     copyFile: jest.fn(),
+    deleteDirectory: jest.fn(),
+    deleteFile: jest.fn()
 };
 
 describe('TestRunner', () => {

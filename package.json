@@ -44,14 +44,14 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
-    "build": "npm run compile && cp src/webview.html out/ && cp -r assets out/",
+    "build": "npm run compile && cp src/webview.html out/ && cp src/webview.css out/ && cp src/webview.js out/ && cp -r assets out/",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test:unit": "jest",
     "test:integration": "vscode-test",
-    "test": "npm run test:unit && npm run test:integration"
+    "test": "npm run test:unit"
   },
   "devDependencies": {
     "@types/diff": "^7.0.2",

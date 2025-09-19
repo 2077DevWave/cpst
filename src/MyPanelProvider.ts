@@ -33,6 +33,9 @@ export class MyPanelProvider
 
   // Implementation of ITestReporter
   public reportProgress(message: any): void {
+    if(message.command === 'error'){
+      this.reportError(message.message);
+    }
     this._view?.webview.postMessage(message);
   }
 
@@ -98,6 +101,15 @@ export class MyPanelProvider
         case "run":
           this._uiService.runStressTest(message.numTests);
           return;
+        case "get-runs":
+          this._uiService.getRunsForActiveSolution();
+          return;
+        case "get-test-cases":
+          this._uiService.getTestCasesForRun(message.runId);
+          return;
+        case "rerun-tests":
+            this._uiService.reRunTests(message.testCases);
+            return;
       }
     });
 
@@ -140,6 +152,12 @@ export class MyPanelProvider
         "diff2html.min.js"
       )
     );
+    const webviewCssUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "out", "webview.css")
+    );
+    const webviewJsUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "out", "webview.js")
+    );
     const htmlPath = vscode.Uri.joinPath(
       this._extensionUri,
       "out",
@@ -151,6 +169,14 @@ export class MyPanelProvider
     htmlContent = htmlContent.replace(
       "%DIFF2HTML_CSS%",
       diff2htmlCssUri.toString()
+    );
+    htmlContent = htmlContent.replace(
+        "%WEBVIEW_CSS%",
+        webviewCssUri.toString()
+    );
+    htmlContent = htmlContent.replace(
+        "%WEBVIEW_JS%",
+        webviewJsUri.toString()
     );
     htmlContent = htmlContent.replace(
       "%DIFF2HTML_JS%",
